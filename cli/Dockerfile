@@ -1,8 +1,11 @@
-FROM node:14.8.0-buster-slim
+FROM node:20-bookworm-slim
 
 WORKDIR /former2
 
-RUN apt-get update && \
-    npm -g install former2
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
 
-ENTRYPOINT ["former2"]
+COPY cli/ cli/
+COPY js/ js/
+
+ENTRYPOINT ["node", "cli/main.js"]

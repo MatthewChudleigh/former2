@@ -580,7 +580,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then((data) => {
         $('#section-networkingandcontentdelivery-cloudfront-originaccessidentities-datatable').deferredBootstrapTable('removeAll');
 
-        data.CloudFrontOriginAccessIdentityList.Items.forEach(oai => {
+        (data.CloudFrontOriginAccessIdentityList.Items || []).forEach(oai => {
             $('#section-networkingandcontentdelivery-cloudfront-originaccessidentities-datatable').deferredBootstrapTable('append', [{
                 f2id: oai.Id,
                 f2type: 'cloudfront.originaccessidentity',
@@ -600,7 +600,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, false).then((data) => {
         $('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable').deferredBootstrapTable('removeAll');
 
-        data.OriginAccessControlList.Items.forEach(item => {
+        (data.OriginAccessControlList.Items || []).forEach(item => {
             $('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable').deferredBootstrapTable('append', [{
                 f2id: item.Id,
                 f2type: 'cloudfront.originaccesscontrol',
@@ -620,7 +620,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-distributions-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.DistributionList.Items.map(async (distribution) => {
+        await Promise.all((data.DistributionList.Items || []).map(async (distribution) => {
             return sdkcall("CloudFront", "getDistribution", {
                 Id: distribution.Id
             }, true).then(async (data) => {
@@ -648,7 +648,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-streamingdistributions-datatable').deferredBootstrapTable('removeAll');
 
-        data.StreamingDistributionList.Items.forEach(async (distribution) => {
+        (data.StreamingDistributionList.Items || []).forEach(async (distribution) => {
             distribution['Tags'] = await getResourceTags(distribution.ARN);
 
             $('#section-networkingandcontentdelivery-cloudfront-streamingdistributions-datatable').deferredBootstrapTable('append', [{
@@ -671,7 +671,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.ContinuousDeploymentPolicyList.Items.map(continuousDeploymentPolicy => {
+        await Promise.all((data.ContinuousDeploymentPolicyList.Items || []).map(continuousDeploymentPolicy => {
             return sdkcall("CloudFront", "getContinuousDeploymentPolicy", {
                 Id: continuousDeploymentPolicy.ContinuousDeploymentPolicy.Id
             }, true).then((data) => {
@@ -694,7 +694,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-cachepolicies-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.CachePolicyList.Items.map(cachePolicy => {
+        await Promise.all((data.CachePolicyList.Items || []).map(cachePolicy => {
             return sdkcall("CloudFront", "getCachePolicy", {
                 Id: cachePolicy.CachePolicy.Id
             }, true).then((data) => {
@@ -720,7 +720,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-originrequestpolicies-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.OriginRequestPolicyList.Items.map(originRequestPolicy => {
+        await Promise.all((data.OriginRequestPolicyList.Items || []).map(originRequestPolicy => {
             return sdkcall("CloudFront", "getOriginRequestPolicy", {
                 Id: originRequestPolicy.OriginRequestPolicy.Id
             }, true).then((data) => {
@@ -744,7 +744,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-realtimelogconfigs-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.RealtimeLogConfigs.Items.map(realtimeLogConfig => {
+        await Promise.all((data.RealtimeLogConfigs.Items || []).map(realtimeLogConfig => {
             return sdkcall("CloudFront", "getRealtimeLogConfig", {
                 ARN: realtimeLogConfig.ARN
             }, true).then((data) => {
@@ -767,7 +767,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-keygroups-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.KeyGroupList.Items.map(keygroup => {
+        await Promise.all((data.KeyGroupList.Items || []).map(keygroup => {
             return sdkcall("CloudFront", "getKeyGroup", {
                 Id: keygroup.KeyGroup.Id
             }, true).then((data) => {
@@ -788,7 +788,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-keygroups-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.PublicKeyList.Items.map(publickey => {
+        await Promise.all((data.PublicKeyList.Items || []).map(publickey => {
             return sdkcall("CloudFront", "getPublicKey", {
                 Id: publickey.Id
             }, true).then((data) => {
@@ -809,7 +809,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-functions-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.FunctionList.Items.map(async (func) => {
+        await Promise.all((data.FunctionList.Items || []).map(async (func) => {
             for (let item of data.FunctionList.Items) { // 2 items in DEVELOPMENT and LIVE map to one CFN output, if we find both, throw away DEVELOPMENT
                 if (func.FunctionMetadata.Stage == "DEVELOPMENT" && item.FunctionMetadata.Stage == "LIVE") {
                     return Promise.resolve();
@@ -844,7 +844,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     }, true).then(async (data) => {
         $('#section-networkingandcontentdelivery-cloudfront-responseheaderspolicies-datatable').deferredBootstrapTable('removeAll');
 
-        await Promise.all(data.ResponseHeadersPolicyList.Items.map(responseheaderpolicy => {
+        await Promise.all((data.ResponseHeadersPolicyList.Items || []).map(responseheaderpolicy => {
             if (responseheaderpolicy.Type == "custom") {
                 return sdkcall("CloudFront", "getResponseHeadersPolicyConfig", {
                     Id: responseheaderpolicy.ResponseHeadersPolicy.Id

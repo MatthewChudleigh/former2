@@ -1,0 +1,40 @@
+[
+    {
+        "f2id": "arn:aws:s3:::my-bucket",
+        "f2type": "s3.bucket",
+        "f2data": {
+            "Name": "my-bucket",
+            "CreationDate": "2024-01-01T00:00:00Z"
+        },
+        "f2region": "us-east-1",
+        "f2link": "https://console.aws.amazon.com/s3/buckets/my-bucket"
+    },
+    {
+        "f2id": "arn:aws:lambda:us-west-2:123456789012:function:my-function",
+        "f2type": "lambda.function",
+        "f2data": {
+            "Configuration": {
+                "FunctionName": "my-function",
+                "Runtime": "nodejs18.x",
+                "Handler": "index.handler",
+                "MemorySize": 128,
+                "Timeout": 30,
+                "FunctionArn": "arn:aws:lambda:us-west-2:123456789012:function:my-function"
+            },
+            "Code": {}
+        },
+        "f2region": "us-west-2",
+        "f2link": "https://console.aws.amazon.com/lambda/home?region=us-west-2#/functions/my-function"
+    },
+    {
+        "f2id": "arn:aws:ec2:us-east-1:123456789012:instance/i-0abcdef1234567890",
+        "f2type": "ec2.instance",
+        "f2data": {
+            "InstanceId": "i-0abcdef1234567890",
+            "InstanceType": "t3.micro",
+            "ImageId": "ami-0abcdef1234567890"
+        },
+        "f2region": "us-east-1",
+        "f2link": "https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:instanceId=i-0abcdef1234567890"
+    }
+]

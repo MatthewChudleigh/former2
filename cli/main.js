@@ -1,34 +1,31 @@
 #!/usr/bin/env node
 
-var AWS = require("aws-sdk");
 var proxy = require('proxy-agent');
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
 const process = require('process');
+const vm = require('vm');
 const deepmerge = require('deepmerge');
-const cliargs = require('commander');
+const { program: cliargs } = require('commander');
 const cliprogress = require('cli-progress');
 const logplease = require('logplease');
 const _colors = require('colors');
 const pjson = require('../package.json');
 const { openStdin } = require("process");
+const { nav, applySearchFilter, applyRegexFilter, applyServiceFilter } = require("./utils");
+const { createSdkcallV3, configureV3 } = require("./sdk-v3-shim");
+const { fromIni } = require("@aws-sdk/credential-providers");
+const { loadSharedConfigFiles } = require("@smithy/shared-ini-file-loader");
 const CLI = true;
 
-process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = '1';
-
 logplease.setLogLevel('NONE');
-const awslog = logplease.create('AWS');
-AWS.config.logger = awslog;
 
 var cli_resources = [];
 var check_objects = [];
 
 function blockUI() { }
 function unblockUI() { }
-function nav(str) {
-    return str.replace(/\s/g, "").replace(/\,/g, "").replace(/\-/g, "").replace(/\&amp\;/g, "And");
-}
 async function getResourceTags(arn) {
     if (!arn) {
         return null;
@@ -44,7 +41,7 @@ async function getResourceTags(arn) {
     if (!resource_tag_cache[ service/*+ "." + type*/ ]) {
         resource_tag_cache[service] = "PENDING";
 
-        await sdkcall("ResourceGroupsTaggingAPI", "getResources", {
+        await context.sdkcall("ResourceGroupsTaggingAPI", "getResources", {
             ResourceTypeFilters: [ service/* + "." + type*/ ]
         }, false).then((data) => {
             resource_tag_cache[ service/* + "." + type*/ ] = data.ResourceTagMappingList;
@@ -95,7 +92,7 @@ function stripAWSTags(tags) {
 }
 
 var resource_tag_cache = {};
-const iaclangselect = "typescript";
+var iaclangselect = "typescript";
 
 function $(selector) { return new $obj(selector) }
 $obj = function (selector) { };
@@ -111,69 +108,107 @@ $obj.prototype.deferredBootstrapTable = function (action, data) {
 }
 $.notify = function () { }
 
-var region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || null;
-try {
-    region = new AWS.IniLoader().loadFrom({isConfig: true})['default']['region'];
-} catch(err) {}
-if (!region) {
-    region = 'us-east-1';
-}
+// Region is initially set from env vars; config file region is loaded async in main()
+var region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
 
 var stack_parameters = [];
 
-// note: defining `window` here, as it is being referenced by some of the imported scripts below
-const window = undefined;
-eval(fs.readFileSync(path.join(__dirname, '../js/deepmerge.js'), 'utf8'));
-eval(fs.readFileSync(path.join(__dirname, '../js/mappings.js'), 'utf8'));
-eval(fs.readFileSync(path.join(__dirname, '../js/datatables.js'), 'utf8'));
+// Build sandbox context with all globals the browser scripts depend on
+var context = vm.createContext({
+    // Globals defined by main.js that scripts read
+    CLI: CLI,
+    cli_resources: cli_resources,
+    check_objects: check_objects,
+    blockUI: blockUI,
+    unblockUI: unblockUI,
+    nav: nav,
+    getResourceTags: getResourceTags,
+    stripAWSTags: stripAWSTags,
+    resource_tag_cache: resource_tag_cache,
+    iaclangselect: iaclangselect,
+    $: $,
+    region: region,
+    stack_parameters: stack_parameters,
+    window: undefined,
+
+    // Node.js builtins the scripts may reference
+    console: console,
+    setTimeout: setTimeout,
+    clearTimeout: clearTimeout,
+    setInterval: setInterval,
+    clearInterval: clearInterval,
+    Promise: Promise,
+    Buffer: Buffer,
+
+    // npm modules used inside browser scripts
+    AWS: {},
+    _AWS: {},
+    deepmerge: deepmerge,
+});
+
+// Load browser scripts into the sandbox context (skip deepmerge.js — npm package is used)
+vm.runInContext(
+    fs.readFileSync(path.join(__dirname, '../js/mappings.js'), 'utf8'),
+    context,
+    { filename: 'js/mappings.js' }
+);
+vm.runInContext(
+    fs.readFileSync(path.join(__dirname, '../js/datatables.js'), 'utf8'),
+    context,
+    { filename: 'js/datatables.js' }
+);
 var items = fs.readdirSync(path.join(__dirname, '../js/services'));
-for (var i=0; i<items.length; i++) {
-    eval(fs.readFileSync(path.join(__dirname, '../js/services', items[i]), 'utf8'));
+for (var i = 0; i < items.length; i++) {
+    vm.runInContext(
+        fs.readFileSync(path.join(__dirname, '../js/services', items[i]), 'utf8'),
+        context,
+        { filename: 'js/services/' + items[i] }
+    );
+}
+
+// Report collector for scan summary
+var scanReport = {
+    accessDenied: [],
+    networkErrors: [],
+    errors: []
 };
 
-f2log = function(msg){};
-f2trace = function(err){};
+// Override the v2 sdkcall (from datatables.js) with v3-backed implementation
+// Pass logger that delegates to context so --debug reassignments take effect
+context.sdkcall = createSdkcallV3({
+    f2debug: function(msg) { return context.f2debug ? context.f2debug(msg) : undefined; },
+    f2log: function(msg) { return context.f2log(msg); },
+    f2trace: function(err) { return context.f2trace(err); }
+}, scanReport);
+
+context.f2log = function(msg){};
+context.f2trace = function(err){};
 
 function saveOutput(opts) {
     if (opts.sortOutput) {
         cli_resources = cli_resources.sort((a, b) => (a.f2id > b.f2id) ? 1 : -1);
     }
 
-    if (opts.outputCloudformation || opts.outputTerraform) {
-        var output_objects = [], jsonres;
+    if (opts.outputCloudformation || opts.outputTerraform ||
+        opts.outputCdk || opts.outputCdkV2 || opts.outputTroposphere ||
+        opts.outputPulumi || opts.outputCdktf) {
+        var filtered = applySearchFilter(cli_resources, opts.searchFilter);
+        filtered = applyRegexFilter(filtered, opts.regexFilter);
 
-        for (var i=0; i<cli_resources.length; i++) {
-            jsonres = null;
-            if (opts.searchFilter) {
-                jsonres = JSON.stringify(cli_resources[i]);
-                if (opts.searchFilter.includes(",")) {
-                    if (!opts.searchFilter.split(",").some((el) => jsonres.includes(el))) continue;
-                } else
-                if (opts.searchFilter.includes("&")) {
-                    if (!opts.searchFilter.split("&").every((el) => jsonres.includes(el))) continue;
-                } else {
-                    if (!jsonres.includes(opts.searchFilter)) continue;
-                }
-            }
-            if (opts.regexFilter) {
-                if (!jsonres) jsonres = JSON.stringify(cli_resources[i]);
-                const ok = opts.regexFilter.test(jsonres);
-                f2log(`${ok?"":"NOT-"}MATCHED: ${jsonres}`);
-                if (!ok) continue;
-            }
-            output_objects.push({
-                'id': cli_resources[i].f2id,
-                'type': cli_resources[i].f2type,
-                'data': cli_resources[i].f2data,
-                'region': cli_resources[i].f2region
-            });
-        }
+        var output_objects = filtered.map(function(resource) {
+            return {
+                'id': resource.f2id,
+                'type': resource.f2type,
+                'data': resource.f2data,
+                'region': resource.f2region
+            };
+        });
 
-        var tracked_resources = performF2Mappings(output_objects);
-        var mapped_outputs = compileOutputs(tracked_resources, opts.cfnDeletionPolicy);
+        var tracked_resources = context.performF2Mappings(output_objects);
+        var mapped_outputs = context.compileOutputs(tracked_resources, opts.cfnDeletionPolicy);
 
         if (opts.outputLogicalIdMapping) {
-            fs.writeFileSync(opts.outputLogicalIdMapping, JSON.stringify(getLogicalToPhysicalIdMap()))
+            fs.writeFileSync(opts.outputLogicalIdMapping, JSON.stringify(context.getLogicalToPhysicalIdMap()))
         }
 
         if (opts.outputCloudformation) {
@@ -183,18 +218,41 @@ function saveOutput(opts) {
         if (opts.outputTerraform) {
             fs.writeFileSync(opts.outputTerraform, mapped_outputs['tf']);
         }
+
+        if (opts.outputCdk) {
+            fs.writeFileSync(opts.outputCdk, mapped_outputs['cdk']);
+        }
+
+        if (opts.outputCdkV2) {
+            fs.writeFileSync(opts.outputCdkV2, mapped_outputs['cdkv2']);
+        }
+
+        if (opts.outputTroposphere) {
+            fs.writeFileSync(opts.outputTroposphere, mapped_outputs['troposphere']);
+        }
+
+        if (opts.outputPulumi) {
+            fs.writeFileSync(opts.outputPulumi, mapped_outputs['pulumi']);
+        }
+
+        if (opts.outputCdktf) {
+            fs.writeFileSync(opts.outputCdktf, mapped_outputs['cdktf']);
+        }
     }
 }
 
 function parseOpts(opts) {
-    if (!opts.outputRawData && !opts.outputCloudformation && !opts.outputTerraform) {
+    if (!opts.outputRawData && !opts.outputCloudformation && !opts.outputTerraform &&
+        !opts.outputCdk && !opts.outputCdkV2 && !opts.outputTroposphere &&
+        !opts.outputPulumi && !opts.outputCdktf) {
         throw new Error('You must specify an output type');
     }
 
     if (opts.debug) {
-        f2log = function(msg){ console.log(msg); };
-        f2trace = function(err){ console.trace(err); };
-        f2debug = function(msg){ console.log(Date.now().toString() + ": " + msg); };
+        logplease.setLogLevel('DEBUG');
+        context.f2log = function(msg){ console.log(msg); };
+        context.f2trace = function(err){ console.trace(err); };
+        context.f2debug = function(msg){ console.log(Date.now().toString() + ": " + msg); };
     }
 
     if (opts.regexFilter) {
@@ -205,62 +263,135 @@ function parseOpts(opts) {
         throw new Error('You must specify --cfn-deletion-policy value in [Delete, Retain]');
     }
 
-    outputMapCdk = function(){};
-    outputMapCdkv2 = function(){};
-    outputMapTroposphere = function(){};
-    outputMapPulumi = function(){};
-    outputMapCdktf = function(){};
-    if (!opts.outputCloudformation) { outputMapCfn = function(){}; }
-    if (!opts.outputTerraform) { outputMapTf = function(){}; }
+    if (opts.iacLanguage) {
+        var validLanguages = ["typescript", "python", "java", "dotnet"];
+        if (!validLanguages.includes(opts.iacLanguage)) {
+            throw new Error('You must specify --iac-language value in [typescript, python, java, dotnet]');
+        }
+        context.iaclangselect = opts.iacLanguage;
+    }
+
+    if (!opts.outputCdk) { context.outputMapCdk = function(){}; }
+    if (!opts.outputCdkV2) { context.outputMapCdkv2 = function(){}; }
+    if (!opts.outputTroposphere) { context.outputMapTroposphere = function(){}; }
+    if (!opts.outputPulumi) { context.outputMapPulumi = function(){}; }
+    if (!opts.outputCdktf) { context.outputMapCdktf = function(){}; }
+    if (!opts.outputCloudformation) { context.outputMapCfn = function(){}; }
+    if (!opts.outputTerraform) { context.outputMapTf = function(){}; }
 
     if (opts.includeDefaultResources) {
-        include_default_resources = true;
+        context.include_default_resources = true;
     }
 
 }
 
-async function main(opts) {
+function printScanReport(scanErrors, scanReport, opts, totalServices) {
+    var hasIssues = scanErrors.length > 0 || scanReport.accessDenied.length > 0 ||
+                    scanReport.networkErrors.length > 0 || scanReport.errors.length > 0;
+    var successCount = totalServices - scanErrors.length;
 
-    if (opts.profile) {
-        AWS.config.credentials = new AWS.SharedIniFileCredentials({profile: opts.profile});
-        if (!opts.region) {
-            var profiles = AWS.util.getProfilesFromSharedConfig(AWS.util.iniLoader, "");
-            if (profiles[opts.profile]) opts.region = profiles[opts.profile].region;
+    if (!hasIssues) {
+        console.log(_colors.green("\nScan completed: " + totalServices + "/" + totalServices + " services successful, no errors."));
+        return;
+    }
+
+    console.error(_colors.yellow("\n\u2500\u2500\u2500 Scan Report \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    console.error(_colors.green("\n\u2714 " + successCount + "/" + totalServices + " service(s) scanned successfully"));
+
+    // Service-level failures (entire updateDatatable threw)
+    if (scanErrors.length > 0) {
+        console.error(_colors.red("\n\u2716 " + scanErrors.length + " service(s) failed:"));
+        scanErrors.forEach(function(e) {
+            var errType = e.error && e.error.code ? e.error.code : (e.error && e.error.name ? e.error.name : "Error");
+            var errMsg = e.error && e.error.message ? e.error.message :
+                (typeof e.error === 'object' && e.error !== null ? JSON.stringify(e.error) : String(e.error || "Unknown error"));
+            // Truncate long messages
+            if (errMsg.length > 120) { errMsg = errMsg.substring(0, 117) + "..."; }
+            console.error("  " + _colors.red(e.category + "/" + e.service) + " - " + errType + ": " + errMsg);
+        });
+        if (opts.debug) {
+            console.error(_colors.dim("\nFull stack traces:"));
+            scanErrors.forEach(function(e) {
+                console.error(_colors.red("\n  [" + e.category + "/" + e.service + "]"));
+                console.error(e.error);
+            });
         }
     }
 
-    if (AWS.config.region) {
-        region = AWS.config.region;
+    // Access denied (permissions issues)
+    if (scanReport.accessDenied.length > 0) {
+        // Group by service
+        var adByService = {};
+        scanReport.accessDenied.forEach(function(item) {
+            if (!adByService[item.service]) { adByService[item.service] = []; }
+            adByService[item.service].push(item.method);
+        });
+        var serviceCount = Object.keys(adByService).length;
+        console.error(_colors.yellow("\n\u26A0 Access denied: " + scanReport.accessDenied.length + " call(s) across " + serviceCount + " service(s)"));
+        Object.keys(adByService).sort().forEach(function(svc) {
+            console.error("  " + _colors.yellow(svc) + ": " + adByService[svc].join(", "));
+        });
+    }
+
+    // SDK call errors (non-access-denied, non-network)
+    if (scanReport.errors.length > 0) {
+        console.error(_colors.red("\n\u2716 " + scanReport.errors.length + " SDK call error(s):"));
+        scanReport.errors.forEach(function(item) {
+            var msg = item.message || "Unknown error";
+            if (msg.length > 120) { msg = msg.substring(0, 117) + "..."; }
+            console.error("  " + _colors.red(item.service + "." + item.method) + " - " + (item.code || "Error") + ": " + msg);
+        });
+    }
+
+    // Network errors
+    if (scanReport.networkErrors.length > 0) {
+        console.error(_colors.yellow("\n\u26A0 " + scanReport.networkErrors.length + " network error(s):"));
+        scanReport.networkErrors.forEach(function(item) {
+            console.error("  " + item.service + "." + item.method + (item.code ? " (" + item.code + ")" : ""));
+        });
+    }
+
+    console.error(_colors.yellow("\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+}
+
+async function main(opts) {
+
+    // Load region from config file (async v3 equivalent of v2 AWS.IniLoader)
+    if (!opts.region) {
+        try {
+            var configFiles = await loadSharedConfigFiles();
+            var profileName = opts.profile || "default";
+            var profileConfig = configFiles.configFile && configFiles.configFile[profileName];
+            if (profileConfig && profileConfig.region) {
+                region = profileConfig.region;
+                context.region = region;
+            }
+        } catch (err) {}
+    }
+
+    if (opts.profile) {
+        configureV3({ credentials: fromIni({ profile: opts.profile }) });
     }
 
     if (opts.region) {
-        AWS.config.update({region: opts.region});
         region = opts.region;
+        context.region = region;
     }
+
+    configureV3({ region: region });
 
     if (opts.proxy) {
-        AWS.config.update({httpOptions: {agent: proxy(opts.proxy)}});
+        var { NodeHttpHandler } = require("@smithy/node-http-handler");
+        var proxyAgent = proxy(opts.proxy);
+        configureV3({
+            requestHandler: new NodeHttpHandler({
+                httpAgent: proxyAgent,
+                httpsAgent: proxyAgent
+            })
+        });
     }
 
-    if (opts.services && opts.services.toUpperCase() == "ALL") {
-        opts.services = null;
-    }
-
-    if (opts.excludeServices && opts.services) {
-        throw new Error('Please do not use --exclude-services and --services simultaneously');
-    }
-
-    var includeExclude = opts.excludeServices || opts.services;
-    if (includeExclude) {
-        var includeExcludeServices = includeExclude.split(",").map(x => x.toLowerCase());
-        for (var i in sections) {
-            var includes = includeExcludeServices.includes(nav(sections[i].service).toLowerCase());
-            if ((opts.services && !includes) || (opts.excludeServices && includes)) {
-                delete sections[i];
-            }
-        }
-        sections = sections.filter(val => val); // reindex
-    }
+    context.sections = applyServiceFilter(context.sections, opts);
 
     const b1 = new cliprogress.SingleBar({
         format: _colors.cyan('{bar}') + '  {percentage}% ({value}/{total} services completed)',
@@ -269,30 +400,35 @@ async function main(opts) {
         hideCursor: false
     });
 
-    b1.start(sections.length, 0);
+    b1.start(context.sections.length, 0);
+
+    var scanErrors = [];
 
     await Promise.all(
-        sections
-        .map(section => {
+        context.sections.map(section => {
             let dtname = 'updateDatatable' + nav(section.category) + nav(section.service);
-            return eval(dtname);
-        })
-        .map(work =>
-            new Promise(async resolve => {
+            let work = context[dtname];
+            return new Promise(async resolve => {
                 try {
                     await work();
                 } catch (err) {
-                    // TODO: verify log setup for CLI (errors do not seem to appear when running `former2`)
-                    awslog.warn(util.format('updateDatatable failed: %j', err));
+                    scanErrors.push({
+                        service: section.service,
+                        category: section.category,
+                        error: err
+                    });
                 } finally {
                     b1.increment();
                     resolve();
                 }
-            })
-        )
+            });
+        })
     );
 
     b1.stop();
+
+    // Print scan summary report
+    printScanReport(scanErrors, scanReport, opts, context.sections.length);
 
     if (opts.outputRawData) {
         fs.writeFileSync(opts.outputRawData, JSON.stringify(cli_resources, null, 4));
@@ -309,9 +445,15 @@ cliargs
     .description('generates outputs and writes them to the specified file')
     .option('--output-cloudformation <filename>', 'filename for CloudFormation output')
     .option('--output-terraform <filename>', 'filename for Terraform output')
+    .option('--output-cdk <filename>', 'filename for CDK v1 output')
+    .option('--output-cdk-v2 <filename>', 'filename for CDK v2 output')
+    .option('--output-troposphere <filename>', 'filename for Troposphere output')
+    .option('--output-pulumi <filename>', 'filename for Pulumi output')
+    .option('--output-cdktf <filename>', 'filename for CDKTF output')
     .option('--output-raw-data <filename>', 'filename for debug output (full)')
     .option('--output-logical-id-mapping <filename>', 'filename for logical to physical id mapping')
     .option('--cfn-deletion-policy <Delete|Retain>', 'add DeletionPolicy in CloudFormation output')
+    .option('--iac-language <typescript|python|java|dotnet>', 'language for CDK/Pulumi/CDKTF output (default: typescript)')
     .option('--search-filter <value>', 'search filter for discovered resources (can be comma separated)')
     .option('--regex-filter <regex>', 'search filter as a RegExp for discovered resources')
     .option('--services <value>', 'list of services to include (can be comma separated (default: ALL))')
@@ -343,21 +485,42 @@ cliargs
     .requiredOption('--input-file <filename>', 'filename with raw data from the generate command')
     .option('--output-cloudformation <filename>', 'filename for CloudFormation output')
     .option('--output-terraform <filename>', 'filename for Terraform output')
+    .option('--output-cdk <filename>', 'filename for CDK v1 output')
+    .option('--output-cdk-v2 <filename>', 'filename for CDK v2 output')
+    .option('--output-troposphere <filename>', 'filename for Troposphere output')
+    .option('--output-pulumi <filename>', 'filename for Pulumi output')
+    .option('--output-cdktf <filename>', 'filename for CDKTF output')
     .option('--output-logical-id-mapping <filename>', 'filename for logical to physical id mapping')
     .option('--cfn-deletion-policy <Delete|Retain>', 'add DeletionPolicy in CloudFormation output')
+    .option('--iac-language <typescript|python|java|dotnet>', 'language for CDK/Pulumi/CDKTF output (default: typescript)')
     .option('--search-filter <value>', 'search filter for discovered resources (can be comma separated)')
     .option('--regex-filter <regex>', 'search filter as a RegExp for discovered resources')
     .option('--sort-output', 'sort resources by their ID before outputting')
     .option('--include-default-resources', 'include default resources such as default VPCs and their subnets')
+    .option('--services <value>', 'list of services to include (can be comma separated (default: ALL))')
+    .option('--exclude-services <value>', 'list of services to exclude (can be comma separated)')
+    .option('--region <regionname>', 'overrides the region used in output templates')
     .option('--debug', 'log debugging messages')
     .action((opts) => {
         parseOpts(opts);
         validation = true;
         cli_resources = JSON.parse(fs.readFileSync(opts.inputFile).toString());
+
+        context.sections = applyServiceFilter(context.sections, opts);
+
+        if (opts.region) {
+            region = opts.region;
+            context.region = region;
+        }
+
         saveOutput(opts);
     });
 
-cliargs.parse(process.argv);
-if (!validation) {
-    cliargs.help();
-}
+cliargs.parseAsync(process.argv).then(() => {
+    if (!validation) {
+        cliargs.help();
+    }
+}).catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

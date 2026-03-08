@@ -1,0 +1,37 @@
+version: "3"
+
+run: when_changed
+
+# https://taskfile.dev/
+# go install github.com/go-task/task/v3/cmd/task@latest
+
+vars:
+  ENV:
+    sh: echo "${ENV:-local}"
+
+dotenv: [".env.{{.ENV}}", ".env"]
+
+tasks:
+  docker:aws:
+    cmds:
+      - |
+        docker run --rm -t -v $(pwd):/former2 -v ~/.aws:/root/.aws \
+          former2:latest generate \
+          --output-raw-data "tmp/all.json" \
+          --region ap-southeast-2 \
+          --sort-output \
+          --debug
+  docker:key:
+    cmds:
+      - |
+        docker run --rm -t -v $(pwd):/former2 \
+          -e AWS_ACCESS_KEY_ID={{.AWS_ACCESS_KEY_ID}} \
+          -e AWS_SECRET_ACCESS_KEY={{.AWS_SECRET_ACCESS_KEY}} \
+          former2:latest generate \
+          --output-raw-data "tmp/all.json" \
+          --region ap-southeast-2 \
+          --sort-output
+  docker:build:
+    cmds:
+      - docker build -f cli/Dockerfile -t former2:latest .
+  

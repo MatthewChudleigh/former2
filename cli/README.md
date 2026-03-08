@@ -2,9 +2,11 @@
 
 <span class="badge-npmversion"><a href="https://npmjs.org/package/former2" title="View this project on NPM"><img src="https://img.shields.io/npm/v/former2.svg" alt="NPM version" /></a></span>
 
-The Former2 CLI allows you to use the [former2.com](https://former2.com) tool directly from your command line.
+The Former2 CLI allows you to use the [former2.com](https://former2.com) tool directly from your command line to scan AWS resources and generate Infrastructure as Code output.
 
-:exclamation: **CAUTION:** The Former2 CLI is experimental. Use at your own risk.
+## Requirements
+
+- Node.js >= 18.0.0
 
 ## Install
 
@@ -12,69 +14,189 @@ The Former2 CLI allows you to use the [former2.com](https://former2.com) tool di
 npm install -g former2
 ```
 
-Or build the Docker image if Node.js is not installed in your environment:
+Or build the Docker image from the repo root:
 
 ```
-docker build https://github.com/iann0036/former2.git#master:cli -t iann0036/former2:latest
+docker build -f cli/Dockerfile -t former2:latest .
 ```
 
-## Usage
+## Credentials
 
-Former2 will load AWS credentials from your local credentials file, environment variables or [other available sources](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html) per default precedence. It is recommended that you provide only read access with these credentials and suggest you assign the [ReadOnlyAccess](https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/ReadOnlyAccess) policy.
+Former2 loads AWS credentials from your local credentials file, environment variables, or [other available sources](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/setting-credentials-node.html) per default precedence. It is recommended that you provide only read access with these credentials — assign the [ReadOnlyAccess](https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/ReadOnlyAccess) policy.
+
+Use `--profile <name>` to select a named profile from your shared credentials file.
+
+## Commands
 
 ### generate
 
-The `generate` command will generate one or multiple outputs from all discovered resources and write them to the filename specified.
+Scans your AWS account for resources and generates one or more IaC output files.
 
 ```
 former2 generate \
-  --output-cloudformation "cloudformation.yml" \
-  --output-terraform "terraform.hcl" \
-  --output-raw-data "debug.json" \
-  --search-filter "myapp" \
-  --exclude-services "CloudWatch,KMS" \
-  --sort-output
+  --output-cloudformation "cfn.yml" \
+  --output-terraform "main.tf" \
+  --output-cdk-v2 "cdk.ts" \
+  --services "S3,Lambda" \
+  --region us-east-1
 ```
 
-When using Docker image:
+With Docker:
 
 ```
-docker run --rm -t -v `pwd`:/former2 -v ~/.aws:/root/.aws \
-iann0036/former2:latest generate \
-  --output-cloudformation "cloudformation.yml" \
-  --output-terraform "terraform.hcl" \
-  --search-filter "myapp" \
-  --exclude-services "CloudWatch,KMS" \
+docker run --rm -t -v $(pwd):/former2 -v ~/.aws:/root/.aws \
+  former2:latest generate \
+  --output-cloudformation "cfn.yml" \
+  --region us-east-1
+```
+
+#### Options
+
+At least one `--output-*` option must be specified.
+
+```
+Output formats:
+  --output-cloudformation <filename>     CloudFormation (YAML)
+  --output-terraform <filename>          Terraform (HCL)
+  --output-cdk <filename>               CDK v1 (TypeScript by default)
+  --output-cdk-v2 <filename>            CDK v2 (TypeScript by default)
+  --output-troposphere <filename>        Troposphere (Python)
+  --output-pulumi <filename>            Pulumi (TypeScript by default)
+  --output-cdktf <filename>             CDKTF (TypeScript by default)
+  --output-raw-data <filename>           Raw JSON of all discovered resources
+  --output-logical-id-mapping <filename> Logical to physical ID mapping (JSON)
+
+Language & policy:
+  --iac-language <lang>                  Language for CDK/Pulumi/CDKTF output
+                                         (typescript, python, java, dotnet; default: typescript)
+  --cfn-deletion-policy <Delete|Retain>  DeletionPolicy for CloudFormation output
+
+Filtering:
+  --services <value>                     Services to include, comma-separated (default: ALL)
+  --exclude-services <value>             Services to exclude, comma-separated
+  --search-filter <value>               Text filter on discovered resources
+                                         (comma = OR, ampersand = AND)
+  --regex-filter <regex>                 RegExp filter on discovered resources
+
+Scan options:
+  --region <regionname>                  AWS region to scan (default: from config/env)
+  --profile <profilename>               AWS profile from shared credentials file
+  --proxy <protocol://host:port>         HTTP/HTTPS proxy
+  --sort-output                          Sort resources by ID before output
+  --include-default-resources            Include default VPCs, subnets, etc.
+  --debug                                Show debug logging and scan error details
+  -h, --help                             Show help
+```
+
+### filter
+
+Produces IaC output from a previously saved raw data file (from `generate --output-raw-data`), without re-scanning AWS. Useful for iterating on filters without repeated API calls.
+
+```
+former2 generate --output-raw-data all.json --region us-east-1
+
+former2 filter \
+  --input-file all.json \
+  --output-cloudformation "cfn.yml" \
+  --services S3 \
   --sort-output
 ```
 
 #### Options
 
-At least one of the options starting with `--output` should be specified.
+```
+Required:
+  --input-file <filename>                Raw data file from a previous generate run
+
+Output formats:
+  --output-cloudformation <filename>     CloudFormation (YAML)
+  --output-terraform <filename>          Terraform (HCL)
+  --output-cdk <filename>               CDK v1
+  --output-cdk-v2 <filename>            CDK v2
+  --output-troposphere <filename>        Troposphere (Python)
+  --output-pulumi <filename>            Pulumi
+  --output-cdktf <filename>             CDKTF
+  --output-logical-id-mapping <filename> Logical to physical ID mapping (JSON)
+
+Language & policy:
+  --iac-language <lang>                  Language for CDK/Pulumi/CDKTF output (default: typescript)
+  --cfn-deletion-policy <Delete|Retain>  DeletionPolicy for CloudFormation output
+
+Filtering:
+  --services <value>                     Services to include, comma-separated (default: ALL)
+  --exclude-services <value>             Services to exclude, comma-separated
+  --search-filter <value>               Text filter (comma = OR, ampersand = AND)
+  --regex-filter <regex>                 RegExp filter on resources
+
+Other:
+  --region <regionname>                  Override region used in output templates
+  --sort-output                          Sort resources by ID
+  --include-default-resources            Include default VPCs, subnets, etc.
+  --debug                                Show debug logging
+  -h, --help                             Show help
+```
+
+## Examples
+
+Generate CloudFormation for Lambda and IAM only:
 
 ```
-Options:
-  --output-cloudformation <filename>     filename for CloudFormation output
-  --output-terraform <filename>          filename for Terraform output
-  --output-raw-data <filename>           filename for debug output (full)
-  --output-logical-id-mapping <filename> filename for logical to physical id mapping
-  --cfn-deletion-policy <Delete|Retain>  add DeletionPolicy in CloudFormation output
-  --search-filter <value>                search filter for discovered resources ('or search' can be comma separated, 'and search' can be '&' separated.)
-  --regex-filter <value>                 regexp filter for discovered resources to include in the output
-  --services <value>                     list of services to include (can be comma separated (default: ALL))
-  --exclude-services <value>             list of services to exclude (can be comma separated)
-  --sort-output                          sort resources by their ID before outputting
-  --include-default-resources            include default resources such as default VPCs and their subnets
-  --region <regionname>                  overrides the default AWS region to scan
-  --profile <profilename>                uses the profile specified from the shared credentials file
-  --proxy <protocol://host:port>         use proxy
-  --debug                                log debugging messages
-  -h, --help                             output usage information
+former2 generate --services "Lambda,IAM" --output-cloudformation "cfn.yml" --region us-east-1
 ```
 
-#### Service Names
+Generate Terraform excluding CloudWatch and KMS:
 
-Below is a list of services for use with the `--services` and `--exclude-services` argument:
+```
+former2 generate --output-terraform "main.tf" --exclude-services "CloudWatch,KMS" --region us-east-1
+```
+
+Generate CDK v2 in Python:
+
+```
+former2 generate --output-cdk-v2 "cdk_app.py" --iac-language python --region us-east-1
+```
+
+Generate Pulumi output for S3 resources:
+
+```
+former2 generate --output-pulumi "index.ts" --services S3 --region us-east-1
+```
+
+Filter by resource name/tag:
+
+```
+former2 generate --output-terraform "main.tf" --search-filter "myapp" --region us-east-1
+```
+
+Filter EC2 resources by regex (exclude instances, volumes, ENIs):
+
+```
+former2 generate --output-cloudformation "cfn.yml" --services EC2 \
+  --regex-filter '"f2type":(?!"(ec2.instance|ec2.volume|ec2.networkinterface)")' \
+  --region us-east-1
+```
+
+Scan once, filter multiple times:
+
+```
+former2 generate --output-raw-data all.json --region us-east-1
+former2 filter --input-file all.json --services S3 --output-cloudformation s3.yml
+former2 filter --input-file all.json --exclude-services S3 --output-cloudformation no-s3.yml
+```
+
+## Error Handling
+
+When services fail during scanning (e.g. due to insufficient permissions), the CLI displays a yellow warning summary after the progress bar:
+
+```
+5 service(s) failed during scan: Inspector, GuardDuty, ...
+```
+
+Use `--debug` to see full error details including stack traces for each failed service.
+
+## Service Names
+
+Below is a list of services for use with `--services` and `--exclude-services`:
 
 <details><summary>Expand</summary>
 
@@ -204,47 +326,17 @@ Below is a list of services for use with the `--services` and `--exclude-service
 * XRay
 </details>
 
-#### Filtering examples
-
-Generate CloudFormation output for Lambda and IAM only.
-
-```
-former2 generate --services "Lambda,IAM" --output-cloudformation "cfn.yaml"
-```
-
-Generate CloudFormation output all services excluding CloudWatch and KMS.
-
-```
-former2 generate --output-cloudformation "cfn.yaml" --exclude-services "CloudWatch,KMS"
-```
-
-Generates Terraform output only for the resources that contain "myapp" in Names or Tags etc.
-Filtering by whether the JSON responses of the AWS SDK calls contain a specified string.
-
-```
-former2 generate --output-terraform "tf.hcl" --search-filter "myapp"
-```
-
-Generate CloudFormation output for EC2 excluding instances with volumes/ENIs
-
-```
-former2 generate --output-cloudformation "cfn.yaml" --services EC2 --regex-filter '"f2type":(?!"(ec2.instance|ec2.volume|ec2.networkinterface))'
-```
-
-## filter
-
-The `filter` command will use saved raw data output from previous `generate` run to produce the outputs instead of queryng the cloud every time you need to change the filter.
-
-The use case which inspired this command was to produce EC2 CFN file without instances and volumes because autoscaling groups take care of launching instances.
-
-```
-former2 filter \
-  --output-cloudformation "cloudformation.yml" \
-  --input-file "debug.json" \
-  --regex-filter '"f2type":(?!"(ec2.instance|elbv2.loadbalancerlistenercertificate|ec2.volume|ec2.networkinterface))' \
-  --sort-output
-```
-
 ## Security
 
-Calls to the AWS service API endpoints are made directly with the JavaScript SDK. Recording data is kept entirely in memory or on local disk and is never sent over the internet or anywhere else. You should take care to remove any sensitive data (passwords etc.) when sharing your generated code/templates with others.
+All AWS API calls are made directly using the AWS SDK v3. Resource data is kept entirely in memory or on local disk and is never sent over the internet or anywhere else. Take care to remove any sensitive data (passwords, secrets) when sharing generated templates with others.
+
+## Development
+
+### Testing
+
+```
+npm test                # Run all tests
+npm run test:unit       # Unit tests only
+npm run test:integration # Integration tests only
+npm run test:coverage   # Tests with coverage report
+```
