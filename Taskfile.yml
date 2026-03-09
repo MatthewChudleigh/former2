@@ -13,24 +13,21 @@ dotenv: [".env.{{.ENV}}", ".env"]
 
 tasks:
   docker:aws:
+    required: [PROFILE]
     cmds:
       - |
-        docker run --rm -t -v $(pwd):/former2 -v ~/.aws:/root/.aws \
+        # Export resolved credentials, then pass them into Docker
+        eval $(aws configure export-credentials --profile {{.PROFILE}} --format env)
+        docker run --rm -t -v $(pwd):/former2 \
+          -e AWS_ACCESS_KEY_ID \
+          -e AWS_SECRET_ACCESS_KEY \
+          -e AWS_SESSION_TOKEN \
+          -e AWS_REGION=ap-southeast-2 \
           former2:latest generate \
-          --output-raw-data "tmp/all.json" \
+          --output-raw-data "tmp/{{.PROFILE}}.json" \
           --region ap-southeast-2 \
           --sort-output \
           --debug
-  docker:key:
-    cmds:
-      - |
-        docker run --rm -t -v $(pwd):/former2 \
-          -e AWS_ACCESS_KEY_ID={{.AWS_ACCESS_KEY_ID}} \
-          -e AWS_SECRET_ACCESS_KEY={{.AWS_SECRET_ACCESS_KEY}} \
-          former2:latest generate \
-          --output-raw-data "tmp/all.json" \
-          --region ap-southeast-2 \
-          --sort-output
   docker:build:
     cmds:
       - docker build -f cli/Dockerfile -t former2:latest .
