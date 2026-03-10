@@ -54,17 +54,21 @@ function loadAllServices(vmContext, context, nav) {
         const key = nav(serviceModule.section.category) + nav(serviceModule.section.service);
         vmContext['updateDatatable' + key] = wrappedUpdate;
 
-        // Wrap mapResources to bridge getResourceName from VM context.
+        // Wrap mapResources to bridge globals from VM context.
         // getResourceName is defined in mappings.js (loaded into vmContext)
         // and uses VM-scoped state (global_used_refs, logicalidstrategy, etc.).
-        // We expose it as a Node global so converted modules can reference it.
+        // stripAWSTags is defined in main.js and used by mapResources.
+        // We expose them as Node globals so converted modules can reference them.
         vmContext.service_mapping_functions.push(function(reqParams, obj, tracked_resources) {
             const prevGetResourceName = global.getResourceName;
+            const prevStripAWSTags = global.stripAWSTags;
             global.getResourceName = vmContext.getResourceName;
+            global.stripAWSTags = vmContext.stripAWSTags;
             try {
                 return serviceModule.mapResources(reqParams, obj, tracked_resources);
             } finally {
                 global.getResourceName = prevGetResourceName;
+                global.stripAWSTags = prevStripAWSTags;
             }
         });
     }

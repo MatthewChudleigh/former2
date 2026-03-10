@@ -545,7 +545,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         }
         reqParams.cfn['TableName'] = obj.data.TableName;
         reqParams.tf['name'] = obj.data.TableName;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         reqParams.cfn['KeySchema'] = obj.data.KeySchema;
         if (obj.data.KeySchema) {
             obj.data.KeySchema.forEach(keyschema => {
@@ -690,7 +690,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         }
         reqParams.cfn['TableName'] = obj.data.TableName;
         reqParams.tf['name'] = obj.data.TableName;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         reqParams.cfn['KeySchema'] = obj.data.KeySchema;
         if (obj.data.KeySchema) {
             obj.data.KeySchema.forEach(keyschema => {

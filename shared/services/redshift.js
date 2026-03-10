@@ -680,7 +680,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             reqParams.cfn['ElasticIp'] = obj.data.ElasticIpStatus.ElasticIp;
             reqParams.tf['elastic_ip'] = obj.data.ElasticIpStatus.ElasticIp;
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -736,7 +736,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             reqParams.cfn['SubnetIds'].push(subnet.SubnetIdentifier);
             reqParams.tf['subnet_ids'].push(subnet.SubnetIdentifier);
         });
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -760,7 +760,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['description'] = obj.data.Description;
         reqParams.cfn['ParameterGroupFamily'] = obj.data.ParameterGroupFamily;
         reqParams.tf['family'] = obj.data.ParameterGroupFamily;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:
@@ -780,7 +780,7 @@ function mapResources(reqParams, obj, tracked_resources) {
     } else if (obj.type == "redshift.securitygroup") {
         reqParams.cfn['Description'] = obj.data.Description;
         reqParams.tf['description'] = obj.data.Description;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -832,7 +832,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['SourceIds'] = obj.data.SourceIdsList;
         reqParams.cfn['SnsTopicArn'] = obj.data.SnsTopicArn;
         reqParams.cfn['EventCategories'] = obj.data.EventCategoriesList;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

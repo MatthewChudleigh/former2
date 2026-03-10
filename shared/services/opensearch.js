@@ -163,7 +163,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['LogPublishingOptions'] = obj.data.LogPublishingOptions;
         reqParams.cfn['DomainEndpointOptions'] = obj.data.DomainEndpointOptions;
         reqParams.cfn['AdvancedSecurityOptions'] = obj.data.AdvancedSecurityOptions;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

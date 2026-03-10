@@ -259,7 +259,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             'RegistryId': obj.data.registryId
         };
         reqParams.cfn['RepositoryPolicyText'] = obj.data.policy;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

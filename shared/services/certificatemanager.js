@@ -324,7 +324,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         if (obj.data.Options) {
             reqParams.cfn['CertificateTransparencyLoggingPreference'] = obj.data.Options.CertificateTransparencyLoggingPreference;
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:
@@ -349,7 +349,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['RevocationConfiguration'] = obj.data.RevocationConfiguration;
         reqParams.cfn['SigningAlgorithm'] = obj.data.CertificateAuthorityConfiguration.SigningAlgorithm;
         reqParams.cfn['Subject'] = obj.data.CertificateAuthorityConfiguration.Subject;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         reqParams.cfn['Type'] = obj.data.Type;
         
         /*

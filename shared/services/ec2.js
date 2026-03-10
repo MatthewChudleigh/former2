@@ -2416,7 +2416,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             reqParams.cfn['Monitoring'] = true;
             reqParams.tf['monitoring'] = true;
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -2586,7 +2586,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['snapshot_id'] = (obj.data.SnapshotId == "") ? null : obj.data.SnapshotId;
         reqParams.cfn['KmsKeyId'] = obj.data.KmsKeyId;
         reqParams.tf['kms_key_id'] = obj.data.KmsKeyId;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -2640,7 +2640,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['description'] = obj.data.Description;
         reqParams.cfn['GroupName'] = obj.data.GroupName;
         reqParams.tf['name'] = obj.data.GroupName;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -2887,7 +2887,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 };
             }
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:
@@ -3316,7 +3316,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['SslPolicy'] = obj.data.SslPolicy;
         reqParams.tf['ssl_policy'] = obj.data.SslPolicy;
 
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         if (obj.data.Tags && obj.data.Tags.length) {
             reqParams.tf['tags'] = new Set();
@@ -3612,7 +3612,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 });
             }
 
-            reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+            reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
             if (obj.data.Tags) {
                 reqParams.tf['tags'] = new Set();
                 obj.data.Tags.forEach(tag => {
@@ -3721,7 +3721,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         if (obj.data.Tags) {
             reqParams.cfn['TagSpecifications'] = [{
                 'ResourceType': 'capacity-reservation',
-                'Tags': context.stripAWSTags(obj.data.Tags)
+                'Tags': stripAWSTags(obj.data.Tags)
             }];
         }
 
@@ -3753,7 +3753,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         if (obj.data.Tags) {
             reqParams.cfn['TagSpecifications'] = [{
                 'ResourceType': 'capacity-reservation-fleet',
-                'Tags': context.stripAWSTags(obj.data.Tags)
+                'Tags': stripAWSTags(obj.data.Tags)
             }];
         }
 
@@ -3826,7 +3826,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         if (obj.data.Tags) {
             reqParams.cfn['TagSpecifications'] = [{
                 'ResourceType': 'fleet',
-                'Tags': context.stripAWSTags(obj.data.Tags)
+                'Tags': stripAWSTags(obj.data.Tags)
             }];
         }
 
@@ -3994,7 +3994,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         }
         reqParams.cfn['LogFormat'] = obj.data.LogFormat;
         reqParams.cfn['MaxAggregationInterval'] = obj.data.MaxAggregationInterval;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

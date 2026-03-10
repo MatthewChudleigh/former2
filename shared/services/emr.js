@@ -746,7 +746,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['ReleaseLabel'] = obj.data.ReleaseLabel;
         reqParams.cfn['VisibleToAllUsers'] = obj.data.VisibleToAllUsers;
         reqParams.cfn['Applications'] = obj.data.Applications;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         reqParams.cfn['ServiceRole'] = obj.data.ServiceRole;
         if (obj.data.Configurations) {
             reqParams.cfn['Configurations'] = [];
@@ -969,7 +969,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['UserRole'] = obj.data.UserRole;
         reqParams.cfn['SubnetIds'] = obj.data.SubnetIds;
         reqParams.cfn['VpcId'] = obj.data.VpcId;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

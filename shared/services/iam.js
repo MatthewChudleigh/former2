@@ -899,7 +899,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['UserName'] = obj.data.UserName;
         reqParams.tf['name'] = obj.data.UserName;
         reqParams.cfn['Groups'] = obj.data.Groups;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -996,7 +996,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             });
         }
         reqParams.cfn['Description'] = obj.data.Description;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
@@ -1222,7 +1222,7 @@ function mapResources(reqParams, obj, tracked_resources) {
     } else if (obj.type == "iam.virtualmfadevice") {
         reqParams.cfn['SerialNumber'] = obj.data.SerialNumber;
         reqParams.cfn['Users'] = [obj.data.User.Arn];
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -1241,7 +1241,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['Path'] = obj.data.ServerCertificateMetadata.Path;
         reqParams.cfn['PrivateKey'] = obj.data.ServerCertificateMetadata.PrivateKey;
         reqParams.cfn['ServerCertificateName'] = obj.data.ServerCertificateMetadata.ServerCertificateName;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -1260,7 +1260,7 @@ function mapResources(reqParams, obj, tracked_resources) {
     } else if (obj.type == "iam.samlprovider") {
         reqParams.cfn['Name'] = obj.data.Name;
         reqParams.cfn['SamlMetadataDocument'] = obj.data.SamlMetadataDocument;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -1277,7 +1277,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['Url'] = obj.data.Url;
         reqParams.cfn['ClientIdList'] = obj.data.ClientIdList;
         reqParams.cfn['ThumbprintList'] = obj.data.ThumbprintList;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

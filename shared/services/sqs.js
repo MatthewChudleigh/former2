@@ -124,7 +124,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['name'] = obj.data.Attributes.QueueArn.split(":").pop();
         reqParams.cfn['RedrivePolicy'] = obj.data.Attributes.RedrivePolicy;
         reqParams.tf['redrive_policy'] = obj.data.Attributes.RedrivePolicy;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

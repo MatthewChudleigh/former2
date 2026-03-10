@@ -172,7 +172,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 'Level': obj.data.loggingConfiguration.level
             };
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         SKIPPED: DefinitionS3Location
@@ -197,7 +197,7 @@ function mapResources(reqParams, obj, tracked_resources) {
     } else if (obj.type == "stepfunctions.activity") {
         reqParams.cfn['Name'] = obj.data.name;
         reqParams.tf['name'] = obj.data.name;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

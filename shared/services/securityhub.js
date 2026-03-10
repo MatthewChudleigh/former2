@@ -63,7 +63,7 @@ async function updateDatatable(context) {
 
 function mapResources(reqParams, obj, tracked_resources) {
     if (obj.type == "securityhub.hub") {
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

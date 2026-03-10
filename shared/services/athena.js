@@ -331,7 +331,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 'ResultConfiguration': obj.data.Configuration.ResultConfiguration
             };
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:
@@ -359,7 +359,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['Description'] = obj.data.Description;
         reqParams.cfn['Type'] = obj.data.Type;
         reqParams.cfn['Parameters'] = obj.data.Parameters;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

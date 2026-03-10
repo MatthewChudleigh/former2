@@ -145,7 +145,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['description'] = obj.data.repositoryDescription;
         reqParams.cfn['RepositoryName'] = obj.data.repositoryName;
         reqParams.tf['repository_name'] = obj.data.repositoryName;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:

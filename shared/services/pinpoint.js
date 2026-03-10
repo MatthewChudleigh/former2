@@ -1900,7 +1900,7 @@ function mapResources(reqParams, obj, tracked_resources) {
     } else if (obj.type == "pinpoint.emailtemplate") {
         reqParams.cfn['HtmlPart'] = obj.data.HtmlPart;
         reqParams.cfn['Subject'] = obj.data.Subject;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags);
         reqParams.cfn['TemplateName'] = obj.data.TemplateName;
         reqParams.cfn['TextPart'] = obj.data.TextPart;
         reqParams.cfn['TemplateDescription'] = obj.data.TemplateDescription;
@@ -1916,7 +1916,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         });
     } else if (obj.type == "pinpoint.smstemplate") {
         reqParams.cfn['Body'] = obj.data.Body;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags);
         reqParams.cfn['TemplateName'] = obj.data.TemplateName;
         reqParams.cfn['TemplateDescription'] = obj.data.TemplateDescription;
         reqParams.cfn['DefaultSubstitutions'] = obj.data.DefaultSubstitutions;
@@ -1930,7 +1930,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             'options': reqParams
         });
     } else if (obj.type == "pinpoint.pushtemplate") {
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags); // wtf?
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags); // wtf?
         reqParams.cfn['ADM'] = obj.data.ADM;
         reqParams.cfn['APNS'] = obj.data.APNS;
         reqParams.cfn['Baidu'] = obj.data.Baidu;
@@ -1949,7 +1949,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             'options': reqParams
         });
     } else if (obj.type == "pinpoint.inapptemplate") {
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags); // wtf?
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags); // wtf?
         reqParams.cfn['TemplateName'] = obj.data.TemplateName;
         reqParams.cfn['TemplateDescription'] = obj.data.TemplateDescription;
         reqParams.cfn['Content'] = obj.data.Content;

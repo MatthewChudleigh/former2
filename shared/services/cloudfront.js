@@ -1131,7 +1131,7 @@ async function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn.DistributionConfig['DefaultRootObject'] = obj.data.DistributionConfig.DefaultRootObject;
         reqParams.cfn.DistributionConfig['IPV6Enabled'] = obj.data.DistributionConfig.IsIPV6Enabled;
         reqParams.tf['is_ipv6_enabled'] = obj.data.DistributionConfig.IsIPV6Enabled;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.DistributionConfig.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.DistributionConfig.Tags);
         if (obj.data.DistributionConfig.Logging && obj.data.DistributionConfig.Logging.Enabled) {
             reqParams.cfn.DistributionConfig['Logging'] = {
                 'Bucket': obj.data.DistributionConfig.Logging.Bucket,
@@ -1198,7 +1198,7 @@ async function mapResources(reqParams, obj, tracked_resources) {
             'S3Origin': obj.data.S3Origin,
             'TrustedSigners': trustedSigners
         };
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:

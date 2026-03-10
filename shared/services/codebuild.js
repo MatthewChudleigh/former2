@@ -517,7 +517,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 });
             });
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -545,7 +545,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         };
         reqParams.cfn['Name'] = obj.data.name;
         reqParams.cfn['Type'] = obj.data.type;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

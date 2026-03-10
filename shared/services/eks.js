@@ -465,7 +465,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['NodeRole'] = obj.data.nodeRole;
         reqParams.cfn['Labels'] = obj.data.labels;
         reqParams.cfn['DiskSize'] = obj.data.diskSize;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags);
         if (obj.data.launchTemplate) {
             reqParams.cfn['LaunchTemplate'] = {
                 'Id': obj.data.launchTemplate.id,

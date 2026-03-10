@@ -261,7 +261,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 });
             });
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -284,7 +284,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['Schedule'] = obj.data.Schedule;
         reqParams.cfn['RoleArn'] = obj.data.RoleArn;
         reqParams.cfn['DataSourceConfiguration'] = obj.data.DataSourceConfiguration;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,
@@ -306,7 +306,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['RoleArn'] = obj.data.RoleArn;
         reqParams.cfn['S3Path'] = obj.data.S3Path;
         reqParams.cfn['FileFormat'] = obj.data.FileFormat;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

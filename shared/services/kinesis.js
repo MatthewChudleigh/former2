@@ -776,7 +776,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['kms_key_id'] = obj.data.KeyId;
         reqParams.cfn['ShardCount'] = obj.data.Shards.length;
         reqParams.tf['shard_count'] = obj.data.Shards.length;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

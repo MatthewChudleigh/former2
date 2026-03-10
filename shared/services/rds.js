@@ -1055,7 +1055,7 @@ function mapResources(reqParams, obj, tracked_resources) {
                 });
             });
         }
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         
 
         /*
@@ -1318,7 +1318,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             reqParams.cfn['SubnetIds'].push(subnet.SubnetIdentifier);
             reqParams.tf['subnet_ids'].push(subnet.SubnetIdentifier);
         });
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {

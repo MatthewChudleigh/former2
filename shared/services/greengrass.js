@@ -1403,7 +1403,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         });
     } else if (obj.type == "greengrass.v2componentversion") {
         reqParams.cfn['InlineRecipe'] = obj.data.recipe.toString();
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.tags);
 
         tracked_resources.push({
             'obj': obj,

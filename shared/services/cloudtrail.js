@@ -171,7 +171,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.tf['kms_key_id'] = obj.data.KmsKeyId;
         reqParams.cfn['IsLogging'] = obj.data.IsLogging;
         reqParams.tf['enable_logging'] = obj.data.IsLogging;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         
         /*
         TODO:
@@ -205,7 +205,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         reqParams.cfn['OrganizationEnabled'] = obj.data.OrganizationEnabled;
         reqParams.cfn['RetentionPeriod'] = obj.data.RetentionPeriod;
         reqParams.cfn['TerminationProtectionEnabled'] = obj.data.TerminationProtectionEnabled;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         tracked_resources.push({
             'obj': obj,

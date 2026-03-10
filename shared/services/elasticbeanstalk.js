@@ -382,7 +382,7 @@ function mapResources(reqParams, obj, tracked_resources) {
             f2log("Could not determine CNAME prefix for Elastic Beanstalk");
         }
 
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
 
         /*
         TODO:

@@ -737,7 +737,7 @@ function mapResources(reqParams, obj, tracked_resources) {
         
         reqParams.cfn['FileSystemConfigs'] = obj.data.Configuration.FileSystemConfigs;
         reqParams.cfn['EphemeralStorage'] = obj.data.Configuration.EphemeralStorage;
-        reqParams.cfn['Tags'] = context.stripAWSTags(obj.data.Tags);
+        reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
             reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
