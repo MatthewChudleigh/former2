@@ -154,7 +154,7 @@ Pull standalone utilities out of `datatables.js` and `mappings.js` into focused 
 
 Deliverable: utility modules created. Originals remain untouched for backward compatibility — no delegation wiring needed since converted code imports from `shared/` directly while unconverted code continues using the originals.
 
-### Stage 4: Decompose datatables.js and mappings.js
+### Stage 4: Decompose datatables.js and mappings.js ✓ COMPLETE
 
 **datatables.js** (~24KB) currently contains:
 - `sections[]` array definition
