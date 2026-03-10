@@ -166,6 +166,9 @@ var moduleContext = {
     getResourceTags: getResourceTags,
     stripAWSTags: stripAWSTags,
     deepmerge: deepmerge,
+    blockUI: blockUI,
+    unblockUI: unblockUI,
+    include_default_resources: false,
 };
 loadAllServices(context, moduleContext, nav);
 
@@ -287,6 +290,7 @@ function parseOpts(opts) {
 
     if (opts.includeDefaultResources) {
         context.include_default_resources = true;
+        moduleContext.include_default_resources = true;
     }
 
 }

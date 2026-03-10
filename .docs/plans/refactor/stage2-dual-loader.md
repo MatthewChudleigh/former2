@@ -1,4 +1,4 @@
-# Stage 2: Build the Dual-Loader
+# Stage 2: Build the Dual-Loader ✓ COMPLETE
 
 ## Objective
 
@@ -247,3 +247,28 @@ cli/main.js         # Use dual-loader instead of direct VM loading
 - 4 new files in `shared/services/`
 - Modifications to `cli/main.js` (~30-50 lines changed)
 - 1 service file moved/converted (`simpledb.js`)
+
+## Completion Notes
+
+All tasks completed. Key implementation decisions:
+
+### 2.1 Service Registry ✓
+Implemented as planned in `shared/services/registry.js`.
+
+### 2.2 Dual-Loader ✓
+Implemented in `shared/services/loader.js`. One deviation from the original plan: the loader scans **both** `js/services/` and `shared/services/` directories to build the full service list. This allows converted services to be removed from `js/services/` without breaking discovery (the original plan only iterated `js/services/`, which would have broken after removing the legacy file).
+
+### 2.3 Proof-of-Concept (SimpleDB) ✓
+Converted as `shared/services/simpledb.js`. Legacy `js/services/simpledb.js` removed. The `getResourceName` dependency is resolved via the loader's `global.getResourceName` bridge (option 1 from the plan — exposing it as a Node global during the mapResources call, scoped to the VM context's implementation).
+
+### 2.4 CLI main.js Integration ✓
+`cli/main.js` imports `loadAllServices` from the dual-loader. The loader bridges converted modules into the VM context (`vmContext.sections`, `vmContext['updateDatatable' + key]`, `vmContext.service_mapping_functions`) so main.js required minimal changes. `moduleContext` includes `blockUI`/`unblockUI`/`include_default_resources` for forward-compatibility with future service conversions.
+
+### 2.5 Integration ✓
+Verified: 138 legacy files + 1 converted module = 139 sections loaded. CLI loads without errors.
+
+### Validation Criteria Status
+- ✓ CLI loads SimpleDB via module path (converted file in `shared/services/`)
+- ✓ All 138 remaining services load correctly via VM sandbox
+- ✓ No changes to `mappings.js` or `datatables.js`
+- ✓ Both `generate` and `filter` commands work

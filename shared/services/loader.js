@@ -33,17 +33,27 @@ const INFRA_FILES = new Set(['registry', 'loader', 'index']);
  */
 function loadAllServices(vmContext, context, nav) {
     const legacyDir = path.join(__dirname, '../../js/services');
-    const items = fs.readdirSync(legacyDir).filter(f => f.endsWith('.js')).sort();
+    const convertedDir = __dirname;
 
-    for (const filename of items) {
-        const basename = path.basename(filename, '.js');
+    // Build the set of all service basenames from both directories.
+    // This allows converted-only services (no legacy counterpart) to be loaded.
+    const legacyFiles = fs.readdirSync(legacyDir).filter(f => f.endsWith('.js'));
+    const convertedFiles = fs.readdirSync(convertedDir)
+        .filter(f => f.endsWith('.js') && !INFRA_FILES.has(path.basename(f, '.js')));
 
-        // Skip infrastructure files
-        if (INFRA_FILES.has(basename)) continue;
+    const allBasenames = new Set();
+    for (const f of legacyFiles) allBasenames.add(path.basename(f, '.js'));
+    for (const f of convertedFiles) allBasenames.add(path.basename(f, '.js'));
 
-        const convertedPath = path.join(__dirname, basename + '.js');
+    const sorted = Array.from(allBasenames).sort();
 
-        if (fs.existsSync(convertedPath)) {
+    for (const basename of sorted) {
+        const convertedPath = path.join(convertedDir, basename + '.js');
+        const legacyPath = path.join(legacyDir, basename + '.js');
+        const hasConverted = fs.existsSync(convertedPath);
+        const hasLegacy = fs.existsSync(legacyPath);
+
+        if (hasConverted) {
             // Converted module — load via require()
             const serviceModule = require('./' + basename);
 
@@ -83,12 +93,12 @@ function loadAllServices(vmContext, context, nav) {
                     global.getResourceName = prevGetResourceName;
                 }
             });
-        } else {
+        } else if (hasLegacy) {
             // Legacy file — load via VM sandbox (existing path)
             vm.runInContext(
-                fs.readFileSync(path.join(legacyDir, filename), 'utf8'),
+                fs.readFileSync(legacyPath, 'utf8'),
                 vmContext,
-                { filename: 'js/services/' + filename }
+                { filename: 'js/services/' + basename + '.js' }
             );
         }
     }

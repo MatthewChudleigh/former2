@@ -119,7 +119,7 @@ Design and document:
 
 Deliverable: `shared/types.js` — JSDoc definitions verified against all 139 service files. See `stage1-shared-interface.md` for validation details.
 
-### Stage 2: Build the dual-loader
+### Stage 2: Build the dual-loader ✓ COMPLETE
 
 Create a compatibility layer that lets both old-style globals and new-style modules coexist. This enables incremental migration rather than a risky big-bang conversion.
 
@@ -141,7 +141,7 @@ For the web:
 
 Both paths feed into the same `sections[]` array and `service_mapping_functions[]` collection.
 
-Deliverable: dual-loader working in CLI with one service converted as proof-of-concept.
+Deliverable: dual-loader working in CLI with one service converted as proof-of-concept. SimpleDB converted and legacy file removed; 138 legacy + 1 module = 139 services loading correctly.
 
 ### Stage 3: Extract utilities
 
