@@ -2,80 +2,39 @@
 
 var proxy = require('proxy-agent');
 const fs = require('fs');
-const util = require('util');
 const path = require('path');
 const process = require('process');
-const vm = require('vm');
 const deepmerge = require('deepmerge');
 const { program: cliargs } = require('commander');
 const cliprogress = require('cli-progress');
 const logplease = require('logplease');
 const _colors = require('colors');
 const pjson = require('../package.json');
-const { openStdin } = require("process");
 const { nav, applySearchFilter, applyRegexFilter, applyServiceFilter } = require("./utils");
 const { createSdkcallV3, configureV3 } = require("./sdk-v3-shim");
-const { loadAllServices } = require("../shared/services/loader");
+const allServices = require("../shared/services");
+const { performF2Mappings, compileOutputs, getResourceName, getLogicalToPhysicalIdMap, setState, setLogFunctions } = require("../shared/mappings");
 const { fromIni } = require("@aws-sdk/credential-providers");
 const { loadSharedConfigFiles } = require("@smithy/shared-ini-file-loader");
-const CLI = true;
 
 logplease.setLogLevel('NONE');
 
-var cli_resources = [];
-var check_objects = [];
+// Region is initially set from env vars; config file region is loaded async in main()
+var region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
 
-function blockUI() { }
-function unblockUI() { }
-async function getResourceTags(arn) {
-    if (!arn) {
-        return null;
-    }
+// Build services array from the index (each entry has section, updateDatatable, mapResources)
+var services = Object.values(allServices);
 
-    if (arn.split(":").length < 7 && !arn.split(":")[5].includes("/")) {
-        return null;
-    }
+// Collect all sections from service modules
+var sections = services.map(s => s.section);
 
-    var service = arn.split(":")[2];
-    var type = arn.split(":")[5].split("/")[0];
-
-    if (!resource_tag_cache[ service/*+ "." + type*/ ]) {
-        resource_tag_cache[service] = "PENDING";
-
-        await context.sdkcall("ResourceGroupsTaggingAPI", "getResources", {
-            ResourceTypeFilters: [ service/* + "." + type*/ ]
-        }, false).then((data) => {
-            resource_tag_cache[ service/* + "." + type*/ ] = data.ResourceTagMappingList;
-        }).catch(() => { });
-        setTimeout((k) => {
-            delete resource_tag_cache[k];
-        }, 20000, service/* + "." + type*/); // 20s cache
-    }
-
-    while (resource_tag_cache[service] == "PENDING") {
-        await new Promise(r => setTimeout(r, 2000));
-    }
-
-    for (var res of resource_tag_cache[ service/* + "." + type*/ ]) {
-        var resarnparts = res['ResourceARN'].split(":");
-        resarnparts[3] = "";
-        resarnparts[4] = "";
-        var arnparts = arn.split(":");
-        arnparts[3] = "";
-        arnparts[4] = "";
-
-        if (resarnparts.join(":") == arnparts.join(":")) {
-            return res['Tags'].filter(tag => !tag['Key'].startsWith("aws:"));
-        }
-    }
-
-    return null;
-}
+// Tag cache for getResourceTags
+var resource_tag_cache = {};
 
 function stripAWSTags(tags) {
     if (tags) {
         if (Array.isArray(tags)) {
-            tags = tags.filter(function (value, index, array) {
+            tags = tags.filter(function (value) {
                 return (!value['Key'].startsWith("aws:"));
             });
         } else {
@@ -92,85 +51,10 @@ function stripAWSTags(tags) {
     return tags;
 }
 
-var resource_tag_cache = {};
-var iaclangselect = "typescript";
-
-function $(selector) { return new $obj(selector) }
-$obj = function (selector) { };
-$obj.prototype.bootstrapTable = function (action, data) {
-    if (action == "append") {
-        cli_resources = [...cli_resources, ...data];
-    }
-}
-$obj.prototype.deferredBootstrapTable = function (action, data) {
-    if (action == "append") {
-        cli_resources = [...cli_resources, ...data];
-    }
-}
-$.notify = function () { }
-
-// Region is initially set from env vars; config file region is loaded async in main()
-var region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
-
-var stack_parameters = [];
-
-// Build sandbox context with all globals the browser scripts depend on
-var context = vm.createContext({
-    // Globals defined by main.js that scripts read
-    CLI: CLI,
-    cli_resources: cli_resources,
-    check_objects: check_objects,
-    blockUI: blockUI,
-    unblockUI: unblockUI,
-    nav: nav,
-    getResourceTags: getResourceTags,
-    stripAWSTags: stripAWSTags,
-    resource_tag_cache: resource_tag_cache,
-    iaclangselect: iaclangselect,
-    $: $,
-    region: region,
-    stack_parameters: stack_parameters,
-    window: undefined,
-
-    // Node.js builtins the scripts may reference
-    console: console,
-    setTimeout: setTimeout,
-    clearTimeout: clearTimeout,
-    setInterval: setInterval,
-    clearInterval: clearInterval,
-    Promise: Promise,
-    Buffer: Buffer,
-
-    // npm modules used inside browser scripts
-    AWS: {},
-    _AWS: {},
-    deepmerge: deepmerge,
-});
-
-// Load browser scripts into the sandbox context (skip deepmerge.js — npm package is used)
-vm.runInContext(
-    fs.readFileSync(path.join(__dirname, '../js/mappings.js'), 'utf8'),
-    context,
-    { filename: 'js/mappings.js' }
-);
-vm.runInContext(
-    fs.readFileSync(path.join(__dirname, '../js/datatables.js'), 'utf8'),
-    context,
-    { filename: 'js/datatables.js' }
-);
-// Load services via dual-loader: converted modules use require(),
-// legacy files use VM sandbox. Both paths bridge into the VM context.
-var moduleContext = {
-    sdkcall: null,  // set after v3 shim override below
-    region: region,
-    getResourceTags: getResourceTags,
-    stripAWSTags: stripAWSTags,
-    deepmerge: deepmerge,
-    blockUI: blockUI,
-    unblockUI: unblockUI,
-    include_default_resources: false,
-};
-loadAllServices(context, moduleContext, nav);
+// Expose getResourceName and stripAWSTags as Node globals
+// (service mapResources functions reference them as bare globals)
+global.getResourceName = getResourceName;
+global.stripAWSTags = stripAWSTags;
 
 // Report collector for scan summary
 var scanReport = {
@@ -179,29 +63,82 @@ var scanReport = {
     errors: []
 };
 
-// Override the v2 sdkcall (from datatables.js) with v3-backed implementation
-// Pass logger that delegates to context so --debug reassignments take effect
-context.sdkcall = createSdkcallV3({
-    f2debug: function(msg) { return context.f2debug ? context.f2debug(msg) : undefined; },
-    f2log: function(msg) { return context.f2log(msg); },
-    f2trace: function(err) { return context.f2trace(err); }
+// Create the v3 sdkcall — log functions are set later in parseOpts
+var f2log = function(msg){};
+var f2trace = function(err){};
+var f2debug = function(msg){};
+
+var sdkcall = createSdkcallV3({
+    f2debug: function(msg) { return f2debug(msg); },
+    f2log: function(msg) { return f2log(msg); },
+    f2trace: function(err) { return f2trace(err); }
 }, scanReport);
 
-// Share the v3 sdkcall with converted modules (loaded via require, not VM)
-moduleContext.sdkcall = context.sdkcall;
+function createGetResourceTags(sdkcall) {
+    return async function getResourceTags(arn) {
+        if (!arn) {
+            return null;
+        }
 
-context.f2log = function(msg){};
-context.f2trace = function(err){};
+        if (arn.split(":").length < 7 && !arn.split(":")[5].includes("/")) {
+            return null;
+        }
 
-function saveOutput(opts) {
+        var service = arn.split(":")[2];
+
+        if (!resource_tag_cache[ service ]) {
+            resource_tag_cache[service] = "PENDING";
+
+            await sdkcall("ResourceGroupsTaggingAPI", "getResources", {
+                ResourceTypeFilters: [ service ]
+            }, false).then((data) => {
+                resource_tag_cache[ service ] = data.ResourceTagMappingList;
+            }).catch(() => { });
+            setTimeout((k) => {
+                delete resource_tag_cache[k];
+            }, 20000, service); // 20s cache
+        }
+
+        while (resource_tag_cache[service] == "PENDING") {
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        for (var res of resource_tag_cache[ service ]) {
+            var resarnparts = res['ResourceARN'].split(":");
+            resarnparts[3] = "";
+            resarnparts[4] = "";
+            var arnparts = arn.split(":");
+            arnparts[3] = "";
+            arnparts[4] = "";
+
+            if (resarnparts.join(":") == arnparts.join(":")) {
+                return res['Tags'].filter(tag => !tag['Key'].startsWith("aws:"));
+            }
+        }
+
+        return null;
+    };
+}
+
+// The context object injected into service updateDatatable functions
+var context = {
+    sdkcall: sdkcall,
+    region: region,
+    getResourceTags: createGetResourceTags(sdkcall),
+    stripAWSTags: stripAWSTags,
+    deepmerge: deepmerge,
+    include_default_resources: false,
+};
+
+function saveOutput(opts, resources) {
     if (opts.sortOutput) {
-        cli_resources = cli_resources.sort((a, b) => (a.f2id > b.f2id) ? 1 : -1);
+        resources = resources.sort((a, b) => (a.f2id > b.f2id) ? 1 : -1);
     }
 
     if (opts.outputCloudformation || opts.outputTerraform ||
         opts.outputCdk || opts.outputCdkV2 || opts.outputTroposphere ||
         opts.outputPulumi || opts.outputCdktf) {
-        var filtered = applySearchFilter(cli_resources, opts.searchFilter);
+        var filtered = applySearchFilter(resources, opts.searchFilter);
         filtered = applyRegexFilter(filtered, opts.regexFilter);
 
         var output_objects = filtered.map(function(resource) {
@@ -213,11 +150,14 @@ function saveOutput(opts) {
             };
         });
 
-        var tracked_resources = context.performF2Mappings(output_objects);
-        var mapped_outputs = context.compileOutputs(tracked_resources, opts.cfnDeletionPolicy);
+        // Collect mapping functions from all services
+        var mappingFunctions = services.map(s => s.mapResources);
+
+        var tracked_resources = performF2Mappings(output_objects, mappingFunctions);
+        var mapped_outputs = compileOutputs(tracked_resources, opts.cfnDeletionPolicy);
 
         if (opts.outputLogicalIdMapping) {
-            fs.writeFileSync(opts.outputLogicalIdMapping, JSON.stringify(context.getLogicalToPhysicalIdMap()))
+            fs.writeFileSync(opts.outputLogicalIdMapping, JSON.stringify(getLogicalToPhysicalIdMap()));
         }
 
         if (opts.outputCloudformation) {
@@ -259,9 +199,10 @@ function parseOpts(opts) {
 
     if (opts.debug) {
         logplease.setLogLevel('DEBUG');
-        context.f2log = function(msg){ console.log(msg); };
-        context.f2trace = function(err){ console.trace(err); };
-        context.f2debug = function(msg){ console.log(Date.now().toString() + ": " + msg); };
+        f2log = function(msg){ console.log(msg); };
+        f2trace = function(err){ console.trace(err); };
+        f2debug = function(msg){ console.log(Date.now().toString() + ": " + msg); };
+        setLogFunctions(f2log, f2trace, f2debug);
     }
 
     if (opts.regexFilter) {
@@ -277,22 +218,12 @@ function parseOpts(opts) {
         if (!validLanguages.includes(opts.iacLanguage)) {
             throw new Error('You must specify --iac-language value in [typescript, python, java, dotnet]');
         }
-        context.iaclangselect = opts.iacLanguage;
+        setState({ iaclangselect: opts.iacLanguage });
     }
-
-    if (!opts.outputCdk) { context.outputMapCdk = function(){}; }
-    if (!opts.outputCdkV2) { context.outputMapCdkv2 = function(){}; }
-    if (!opts.outputTroposphere) { context.outputMapTroposphere = function(){}; }
-    if (!opts.outputPulumi) { context.outputMapPulumi = function(){}; }
-    if (!opts.outputCdktf) { context.outputMapCdktf = function(){}; }
-    if (!opts.outputCloudformation) { context.outputMapCfn = function(){}; }
-    if (!opts.outputTerraform) { context.outputMapTf = function(){}; }
 
     if (opts.includeDefaultResources) {
         context.include_default_resources = true;
-        moduleContext.include_default_resources = true;
     }
-
 }
 
 function printScanReport(scanErrors, scanReport, opts, totalServices) {
@@ -375,7 +306,6 @@ async function main(opts) {
             if (profileConfig && profileConfig.region) {
                 region = profileConfig.region;
                 context.region = region;
-                moduleContext.region = region;
             }
         } catch (err) {}
     }
@@ -387,7 +317,6 @@ async function main(opts) {
     if (opts.region) {
         region = opts.region;
         context.region = region;
-        moduleContext.region = region;
     }
 
     configureV3({ region: region });
@@ -403,7 +332,7 @@ async function main(opts) {
         });
     }
 
-    context.sections = applyServiceFilter(context.sections, opts);
+    var filteredSections = applyServiceFilter(sections, opts);
 
     const b1 = new cliprogress.SingleBar({
         format: _colors.cyan('{bar}') + '  {percentage}% ({value}/{total} services completed)',
@@ -412,17 +341,22 @@ async function main(opts) {
         hideCursor: false
     });
 
-    b1.start(context.sections.length, 0);
+    b1.start(filteredSections.length, 0);
 
     var scanErrors = [];
+    var allResources = [];
 
     await Promise.all(
-        context.sections.map(section => {
-            let dtname = 'updateDatatable' + nav(section.category) + nav(section.service);
-            let work = context[dtname];
+        filteredSections.map(section => {
+            // Find the service module that owns this section
+            var serviceModule = services.find(s => s.section === section);
+
             return new Promise(async resolve => {
                 try {
-                    await work();
+                    var resources = await serviceModule.updateDatatable(context);
+                    if (resources && resources.length) {
+                        allResources.push(...resources);
+                    }
                 } catch (err) {
                     scanErrors.push({
                         service: section.service,
@@ -440,13 +374,13 @@ async function main(opts) {
     b1.stop();
 
     // Print scan summary report
-    printScanReport(scanErrors, scanReport, opts, context.sections.length);
+    printScanReport(scanErrors, scanReport, opts, filteredSections.length);
 
     if (opts.outputRawData) {
-        fs.writeFileSync(opts.outputRawData, JSON.stringify(cli_resources, null, 4));
+        fs.writeFileSync(opts.outputRawData, JSON.stringify(allResources, null, 4));
     }
 
-    saveOutput(opts);
+    saveOutput(opts, allResources);
 
 }
 
@@ -516,17 +450,14 @@ cliargs
     .action((opts) => {
         parseOpts(opts);
         validation = true;
-        cli_resources = JSON.parse(fs.readFileSync(opts.inputFile).toString());
-
-        context.sections = applyServiceFilter(context.sections, opts);
+        var resources = JSON.parse(fs.readFileSync(opts.inputFile).toString());
 
         if (opts.region) {
             region = opts.region;
             context.region = region;
-            moduleContext.region = region;
         }
 
-        saveOutput(opts);
+        saveOutput(opts, resources);
     });
 
 cliargs.parseAsync(process.argv).then(() => {
