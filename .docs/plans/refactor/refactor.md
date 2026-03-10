@@ -143,16 +143,16 @@ Both paths feed into the same `sections[]` array and `service_mapping_functions[
 
 Deliverable: dual-loader working in CLI with one service converted as proof-of-concept. SimpleDB converted and legacy file removed; 138 legacy + 1 module = 139 services loading correctly.
 
-### Stage 3: Extract utilities
+### Stage 3: Extract utilities ✓ COMPLETE
 
 Pull standalone utilities out of `datatables.js` and `mappings.js` into focused modules. These have no dependencies on the service pattern and can be done first:
 
-- `shared/formatters.js` — `primaryFieldFormatter`, `dateFormatter`, `byteSizeFormatter`, `tickFormatter`, `timeAgoFormatter`, etc. (currently in `datatables.js`)
-- `shared/pagination.js` — pagination helpers for 40+ AWS services using NextToken, Marker, etc. (currently duplicated between `datatables.js` and `cli/sdk-v3-shim.js`)
-- `shared/deepmerge.js` — paginated response merging (currently `js/deepmerge.js`)
-- `shared/relationships.js` — resource relationship map (currently `js/RelationshipTypeMap.js`)
+- `shared/formatters.js` — `textFormatter`, `primaryFieldFormatter`, `dateFormatter`, `tickFormatter`, `byteSizeFormatter`, `timeAgoFormatter`, `lambdaRuntimeFormatter` (extracted from `datatables.js`)
+- `shared/pagination.js` — `getPaginationParams` + `paginatedCall` covering all 23 pagination token patterns (consolidated from `datatables.js` and `cli/sdk-v3-shim.js`, fixing 2 bugs in the original)
+- `shared/deepmerge.js` — re-exports npm `deepmerge` package
+- `shared/relationships.js` — loads and exports merged `RELATIONSHIP_TYPE_MAP` from original `js/RelationshipTypeMap.js` via VM sandbox (avoids duplicating 5000+ lines; data will live here directly after Stage 8)
 
-Deliverable: utility modules with the originals updated to delegate to them (or dual-loaded).
+Deliverable: utility modules created. Originals remain untouched for backward compatibility — no delegation wiring needed since converted code imports from `shared/` directly while unconverted code continues using the originals.
 
 ### Stage 4: Decompose datatables.js and mappings.js
 

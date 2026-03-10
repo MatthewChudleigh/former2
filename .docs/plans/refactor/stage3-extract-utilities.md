@@ -1,4 +1,4 @@
-# Stage 3: Extract Utilities
+# Stage 3: Extract Utilities ✓ COMPLETE
 
 ## Objective
 
@@ -195,24 +195,24 @@ shared/
 
 None in this stage — originals remain untouched for backward compatibility.
 
-## Validation Criteria
+## Validation Criteria — All Met
 
-- `shared/formatters.js` exports match the functions used in service file column definitions
-- `shared/pagination.js` handles all 15+ pagination patterns from `datatables.js:336-564`
-- `shared/pagination.js` pagination logic matches `cli/sdk-v3-shim.js` pagination logic
-- All modules can be `require()`'d without errors
-- Existing CLI and browser paths are unaffected (no changes to originals)
+- ✓ `shared/formatters.js` exports match the functions used in service file column definitions — 7 formatters exported (textFormatter, primaryFieldFormatter, dateFormatter, tickFormatter, byteSizeFormatter, timeAgoFormatter, lambdaRuntimeFormatter), browser-only formatters correctly excluded
+- ✓ `shared/pagination.js` handles all 15+ pagination patterns from `datatables.js:336-564` — all 23 patterns covered
+- ✓ `shared/pagination.js` pagination logic matches `cli/sdk-v3-shim.js` pagination logic — matches and fixes 2 bugs from `datatables.js` (DynamoDB `listGlobalTables` used wrong response field; DynamoDBStreams `listStreams` used wrong param name)
+- ✓ All modules can be `require()`'d without errors — verified: formatters (7 exports), pagination (2 exports), deepmerge (function with `.all()`), relationships (920 keys)
+- ✓ Existing CLI and browser paths are unaffected (no changes to originals)
 
 ## Dependencies
 
 - Stage 1 (type definitions)
 - Independent of Stage 2 (can be done in parallel)
 
-## Estimated Scope
+## Actual Scope
 
-- 4 new files under `shared/`
-- `formatters.js`: ~80 lines
-- `pagination.js`: ~120 lines
-- `deepmerge.js`: ~3 lines (re-export)
-- `relationships.js`: ~5080 lines (data move)
+- 4 new files created under `shared/`:
+- `formatters.js`: 141 lines (7 formatter functions + module.exports)
+- `pagination.js`: 184 lines (getPaginationParams + paginatedCall with JSDoc)
+- `deepmerge.js`: 5 lines (re-export of npm deepmerge)
+- `relationships.js`: 26 lines (loads original via VM sandbox, exports merged result)
 - No changes to existing files
