@@ -182,25 +182,29 @@ Break into:
 
 Deliverable: decomposed modules, with original files reduced to thin wrappers that re-export (for backward compatibility during migration).
 
-### Stage 5: Convert service files incrementally
+### Stage 5: Convert service files incrementally ✓ COMPLETE
 
-Migrate the 139 service files one at a time or in batches using a codemod script. For each file:
+Migrated all 139 service files from global-based browser scripts to module-based exports using an automated codemod script (`scripts/codemod-service.js`).
 
-1. Export `section` metadata (previously pushed to global `sections[]`)
-2. Export `updateDatatable(context)` that **returns** resources instead of calling `$().deferredBootstrapTable('append', ...)`
-3. Export `mapResources` function (previously pushed to global `service_mapping_functions[]`)
-4. Replace implicit globals (`sdkcall`, `region`, etc.) with `context.*` references
+For each file the codemod applied 7 transformations:
+1. `sections.push({...})` → `const section = {...}`
+2. `updateDatatable*()` → `updateDatatable(context)` with `resources[]` return array
+3. `$('#...').deferredBootstrapTable('append', [...])` → `resources.push({...})`
+4. `blockUI`/`unblockUI` → removed
+5. Global refs → `context.*` (`sdkcall`, `region`, `getResourceTags`, `include_default_resources`)
+6. `service_mapping_functions.push(function(...))` → `function mapResources(...)`
+7. Bare formatter references → string references (e.g., `primaryFieldFormatter` → `'primaryFieldFormatter'`)
 
-The files follow a consistent pattern, so a codemod can handle most of the conversion:
-- Replace `sections.push({...})` → `const section = {...}; module.exports.section = section;`
-- Replace `$('#...').deferredBootstrapTable('append', [{...}])` → `resources.push({...})`
-- Replace bare `sdkcall(` → `context.sdkcall(`
-- Replace bare `region` → `context.region`
-- Wrap `service_mapping_functions.push(function(...) { ... })` → `module.exports.mapResources = function(...) { ... }`
+Key decisions:
+- `stripAWSTags` kept as bare reference (used in both `updateDatatable` and `mapResources`) — bridged as a Node global by the loader alongside `getResourceName`
+- `async function mapResources` supported for cloudfront.js (only file with async mapping function)
 
-The dual-loader from Stage 2 allows each file to be converted and tested independently. Converted files are loaded via `require()`, unconverted files continue through the VM sandbox.
-
-Deliverable: all 139 service files converted, dual-loader only using the module path.
+Deliverables:
+- All 139 service files converted in `shared/services/`, legacy `js/services/` files deleted
+- `shared/services/loader.js` simplified — only uses module path, no VM sandbox for services
+- `shared/services/index.js` re-exports all 139 modules
+- `scripts/codemod-service.js` — reusable conversion script (supports `--all`, `--dry-run`, single-file modes)
+- All 74 tests pass (6 suites)
 
 ### Stage 6: Update CLI to import directly
 
