@@ -813,7 +813,7 @@ async function updateDatatable(context) {
     return resources;
 }
 
-service_mapping_functions.push(async function(reqParams, obj, tracked_resources){
+async function mapResources(reqParams, obj, tracked_resources) {
     if (obj.type == "cloudfront.distribution") {
         reqParams.cfn['DistributionConfig'] = {};
         reqParams.cfn.DistributionConfig['Aliases'] = obj.data.DistributionConfig.Aliases.Items;
@@ -1508,6 +1508,6 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
     }
 
     return true;
-});
+}
 
 module.exports = { section, updateDatatable, mapResources };

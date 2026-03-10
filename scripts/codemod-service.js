@@ -172,17 +172,18 @@ function replaceDeferredAppends(source) {
  * Convert service_mapping_functions.push(function(...) {...}); to function mapResources(...) {...}
  */
 function convertMappingFunction(source) {
-    const marker = 'service_mapping_functions.push(function';
-    const idx = source.indexOf(marker);
-    if (idx < 0) return source;
+    const marker = source.match(/service_mapping_functions\.push\((async\s+)?function/);
+    if (!marker) return source;
+    const idx = marker.index;
+    const isAsync = !!marker[1];
 
     // Find the function signature: function(reqParams, obj, tracked_resources) {
     const sigStart = idx + 'service_mapping_functions.push('.length;
     const braceStart = source.indexOf('{', sigStart);
     const signature = source.substring(sigStart, braceStart).trim();
 
-    // Extract params from "function(reqParams, obj, tracked_resources)"
-    const paramsMatch = signature.match(/function\s*\(([^)]*)\)/);
+    // Extract params from "function(reqParams, obj, tracked_resources)" or "async function(...)"
+    const paramsMatch = signature.match(/(?:async\s+)?function\s*\(([^)]*)\)/);
     const params = paramsMatch ? paramsMatch[1] : 'reqParams, obj, tracked_resources';
 
     // Find the matching closing brace for the function body
@@ -202,7 +203,8 @@ function convertMappingFunction(source) {
     const functionBody = source.substring(braceStart + 1, bodyEnd - 1);
 
     // Build the new function
-    const newFunc = `function mapResources(${params}) {${functionBody}}`;
+    const asyncPrefix = isAsync ? 'async ' : '';
+    const newFunc = `${asyncPrefix}function mapResources(${params}) {${functionBody}}`;
 
     return source.substring(0, idx) + newFunc + source.substring(fullEnd);
 }
