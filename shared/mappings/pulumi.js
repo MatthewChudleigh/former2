@@ -58,7 +58,7 @@ function outputMapPulumi(index, service, type, options, region, was_blocked, log
             if (typeof options[option] !== "undefined" && options[option] !== null) {
                 if (Array.isArray(options[option]) && typeof options[option][0] === 'object') {
                     for (var i = 0; i < options[option].length; i++) {
-                        var optionvalue = processPulumiParameter(options[option][i], 4, index, tracked_resources);
+                        var optionvalue = processPulumiParameter(options[option][i], 4, index, tracked_resources, state);
                         if (typeof optionvalue !== "undefined") {
                             if (optionvalue[0] == '{') {
                                 params += `
@@ -74,7 +74,7 @@ function outputMapPulumi(index, service, type, options, region, was_blocked, log
 
                     }
                 } else {
-                    var optionvalue = processPulumiParameter(options[option], 4, index, tracked_resources);
+                    var optionvalue = processPulumiParameter(options[option], 4, index, tracked_resources, state);
                     if (typeof optionvalue !== "undefined") {
                         if (optionvalue[0] == '{') {
                             params += `

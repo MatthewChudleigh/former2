@@ -29,7 +29,7 @@ function outputMapTroposphere(index, service, type, options, region, was_blocked
     if (Object.keys(options).length) {
         for (option in options) {
             if (typeof options[option] !== "undefined" && options[option] !== null) {
-                var optionvalue = processTroposphereParameter(options[option], 4, troposervice + "." + option, index, tracked_resources);
+                var optionvalue = processTroposphereParameter(options[option], 4, troposervice + "." + option, index, tracked_resources, state);
                 if (typeof optionvalue !== "undefined") {
                     params += `,
     ${option}=${optionvalue}`;

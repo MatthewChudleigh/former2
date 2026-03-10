@@ -12,7 +12,7 @@ function outputMapCdk(index, service, type, options, region, was_blocked, logica
                 if (iaclangselect == "java" || iaclangselect == "dotnet") {
                     initialSpacing = 20;
                 }
-                var optionvalue = processCdkParameter(options[option], initialSpacing, index, tracked_resources);
+                var optionvalue = processCdkParameter(options[option], initialSpacing, index, tracked_resources, state);
 
                 if (typeof optionvalue !== "undefined") {
                     if (iaclangselect == "python") {
@@ -91,7 +91,7 @@ function outputMapCdkv2(index, service, type, options, region, was_blocked, logi
                 if (iaclangselect == "java" || iaclangselect == "dotnet") {
                     initialSpacing = 20;
                 }
-                var optionvalue = processCdkv2Parameter(options[option], initialSpacing, index, tracked_resources);
+                var optionvalue = processCdkv2Parameter(options[option], initialSpacing, index, tracked_resources, state);
 
                 if (typeof optionvalue !== "undefined") {
                     if (iaclangselect == "python") {

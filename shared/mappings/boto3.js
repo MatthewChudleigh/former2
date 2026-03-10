@@ -1,7 +1,7 @@
 var { processBoto3Parameter, ensureInitDeclaredBoto3 } = require('./helpers');
 
 function outputMapBoto3(service, method, options, region, was_blocked, state) {
-    var output = ensureInitDeclaredBoto3(service, region);
+    var output = ensureInitDeclaredBoto3(service, region, state);
     var params = '';
 
     if (Object.keys(options).length) {

@@ -13,7 +13,7 @@ function outputMapCdktf(index, service, type, options, region, was_blocked, logi
         for (option in options) {
             if (typeof options[option] !== "undefined" && options[option] !== null) {
                 var initialSpacing = 12;
-                var optionvalue = processCdktfParameter(options[option], initialSpacing, index, tracked_resources);
+                var optionvalue = processCdktfParameter(options[option], initialSpacing, index, tracked_resources, state);
 
                 if (typeof optionvalue !== "undefined") {
                     if (iaclangselect == "typescript") {

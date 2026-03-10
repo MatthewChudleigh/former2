@@ -1,7 +1,7 @@
 var { processJsParameter, ensureInitDeclaredJs } = require('./helpers');
 
 function outputMapJs(service, method, options, region, was_blocked, state) {
-    var output = ensureInitDeclaredJs(service, region);
+    var output = ensureInitDeclaredJs(service, region, state);
     var params = '';
 
     if (Object.keys(options).length) {

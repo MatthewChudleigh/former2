@@ -8,7 +8,7 @@ function outputMapCfn(index, service, type, options, region, was_blocked, logica
     if (Object.keys(options).length) {
         for (option in options) {
             if (options[option] !== undefined && options[option] !== null) {
-                var optionvalue = processCfnParameter(options[option], (cfnspacing.length * 3), index, tracked_resources);
+                var optionvalue = processCfnParameter(options[option], (cfnspacing.length * 3), index, tracked_resources, state);
 
                 if (!option.match(/^[a-zA-Z0-9-_]+$/g)) {
                     option = `"${option.replace(/"/g, "\\\"")}"`;
