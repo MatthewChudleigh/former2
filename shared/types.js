@@ -200,10 +200,9 @@
  *   AWS console URL for the resource. Optional — primarily used by
  *   the browser UI.
  *
- * @property {Object.<string, *>} [displayFields]
- *   Additional key-value pairs for datatable display columns
- *   (e.g. `name`, `arn`, `state`). Keys correspond to `field` values
- *   in the service's {@link ColumnDefinition}s.
+ * Additional display fields are stored as flat properties directly on
+ * the record (e.g. `name`, `arn`, `state` — not nested in a sub-object).
+ * Keys correspond to `field` values in the service's {@link ColumnDefinition}s.
  */
 
 // ── MapResources ────────────────────────────────────────────────────

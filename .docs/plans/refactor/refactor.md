@@ -109,7 +109,7 @@ const context = {
 
 ## Stages
 
-### Stage 1: Define the shared interface
+### Stage 1: Define the shared interface ✓ COMPLETE
 
 Design and document:
 - The `context` object shape (what services receive)
@@ -117,7 +117,7 @@ Design and document:
 - The return type for `updateDatatable` (array of resource objects with `f2id`, `f2type`, `f2data`, `f2region`, etc.)
 - The `sdkcall` function signature
 
-Deliverable: a types/interface file or JSDoc definitions that all subsequent work conforms to.
+Deliverable: `shared/types.js` — JSDoc definitions verified against all 139 service files. See `stage1-shared-interface.md` for validation details.
 
 ### Stage 2: Build the dual-loader
 
