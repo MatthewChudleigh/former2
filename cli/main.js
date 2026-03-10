@@ -15,6 +15,7 @@ const pjson = require('../package.json');
 const { openStdin } = require("process");
 const { nav, applySearchFilter, applyRegexFilter, applyServiceFilter } = require("./utils");
 const { createSdkcallV3, configureV3 } = require("./sdk-v3-shim");
+const { loadAllServices } = require("../shared/services/loader");
 const { fromIni } = require("@aws-sdk/credential-providers");
 const { loadSharedConfigFiles } = require("@smithy/shared-ini-file-loader");
 const CLI = true;
@@ -157,14 +158,16 @@ vm.runInContext(
     context,
     { filename: 'js/datatables.js' }
 );
-var items = fs.readdirSync(path.join(__dirname, '../js/services'));
-for (var i = 0; i < items.length; i++) {
-    vm.runInContext(
-        fs.readFileSync(path.join(__dirname, '../js/services', items[i]), 'utf8'),
-        context,
-        { filename: 'js/services/' + items[i] }
-    );
-}
+// Load services via dual-loader: converted modules use require(),
+// legacy files use VM sandbox. Both paths bridge into the VM context.
+var moduleContext = {
+    sdkcall: null,  // set after v3 shim override below
+    region: region,
+    getResourceTags: getResourceTags,
+    stripAWSTags: stripAWSTags,
+    deepmerge: deepmerge,
+};
+loadAllServices(context, moduleContext, nav);
 
 // Report collector for scan summary
 var scanReport = {
@@ -180,6 +183,9 @@ context.sdkcall = createSdkcallV3({
     f2log: function(msg) { return context.f2log(msg); },
     f2trace: function(err) { return context.f2trace(err); }
 }, scanReport);
+
+// Share the v3 sdkcall with converted modules (loaded via require, not VM)
+moduleContext.sdkcall = context.sdkcall;
 
 context.f2log = function(msg){};
 context.f2trace = function(err){};
@@ -365,6 +371,7 @@ async function main(opts) {
             if (profileConfig && profileConfig.region) {
                 region = profileConfig.region;
                 context.region = region;
+                moduleContext.region = region;
             }
         } catch (err) {}
     }
@@ -376,6 +383,7 @@ async function main(opts) {
     if (opts.region) {
         region = opts.region;
         context.region = region;
+        moduleContext.region = region;
     }
 
     configureV3({ region: region });
@@ -511,6 +519,7 @@ cliargs
         if (opts.region) {
             region = opts.region;
             context.region = region;
+            moduleContext.region = region;
         }
 
         saveOutput(opts);
