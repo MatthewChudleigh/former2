@@ -93,8 +93,8 @@ function convertFile(source) {
     // getResourceTags( → context.getResourceTags(
     output = output.replace(/(?<![.\w])getResourceTags\(/g, 'context.getResourceTags(');
 
-    // stripAWSTags( → context.stripAWSTags(
-    output = output.replace(/(?<![.\w])stripAWSTags\(/g, 'context.stripAWSTags(');
+    // stripAWSTags stays as a bare reference — bridged as a Node global by the loader,
+    // since it's used in both updateDatatable and mapResources (where context isn't in scope).
 
     // include_default_resources → context.include_default_resources
     output = output.replace(/(?<![.\w])include_default_resources\b/g, 'context.include_default_resources');
