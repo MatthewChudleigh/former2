@@ -255,16 +255,34 @@ const output = compileOutputs(tracked, deletionPolicy);
 
 Deliverable: CLI works without `vm` module. Remove `blockUI`/`unblockUI` stubs, jQuery mocks, and all VM-related code.
 
-### Stage 7: Add bundler and update web UI
+### Stage 7: Add bundler and update web UI ✓ COMPLETE
 
-The web UI currently loads 139+ files via `<script>` tags in `index.html` with no build step. This stage introduces a bundler and refactors the browser-side orchestrator.
+Introduced webpack bundler for the web UI, replacing 139+ `<script>` tags with a single bundled script.
 
-1. **Add webpack or vite** — configure to bundle `shared/` modules for browser consumption
-2. **Refactor `app.js`** (~16KB) — the browser orchestrator that builds tabs from `sections[]`, wires click handlers to `updateDatatable*` functions, and manages output generation. Update to import from `shared/` and handle the new return-value-based service interface (render returned resources into the DOM)
-3. **Create `web/sdkcall-browser.js`** — browser-side `sdkcall` implementation wrapping AWS SDK v2 or v3 browser bundle
-4. **Update `index.html`** — replace 139+ `<script>` tags with a single bundled script
+Created:
+- `webpack.config.js` — webpack 5 config targeting web, with Node.js polyfill fallbacks disabled
+- `web/app.js` — bundle entry point that imports `shared/services`, `shared/mappings`, `shared/formatters`, creates browser sdkcall, registers `updateDatatable*` wrappers on window, and routes returned resources to the correct datatables via f2type mapping
+- `web/sdkcall-browser.js` — browser-side `sdkcall` implementation using AWS SDK v2 (global), shared pagination module, and shared sdkcall constants (region overrides, throttle codes)
+- `web/f2type-map.js` — auto-generated mapping (917 entries) from f2type values to section resourcetype names for datatable routing
+- `scripts/generate-f2type-map.js` — generation script using name-based heuristics + manual overrides for complex services (apigateway, route53, cloudfront, etc.)
+- `js/datatables-browser.js` — browser-only formatters (`primaryTextFormatter`, `detailFormatter`, `recursivePrettyPrintMap`) extracted from `js/datatables.js`
 
-Deliverable: web UI works with bundled modules, no more global script loading.
+Updated:
+- `index.html` — replaced 139 service script tags + `js/deepmerge.js` + `js/mappings.js` + `js/datatables.js` with single `dist/former2-bundle.js`. Kept `js/aws-sdk-2.1519.0.min.js`, `js/RelationshipTypeMap.js`, `js/deferred-datatable.js`, `js/app.js` as separate scripts
+- `package.json` — added webpack/webpack-cli devDependencies, `build:web`/`dev:web`/`generate:f2type-map` scripts
+- `.gitignore` — added `dist/`
+
+Key design decisions:
+- `js/app.js` (6500 lines of UI code) kept as-is — bundle exposes all globals it expects (`sections`, `sdkcall`, formatters, `performF2Mappings`, `compileOutputs`, `updateDatatable*`, etc.)
+- AWS SDK v2 remains as separate `<script>` tag (1.5MB+, rarely changes)
+- `RELATIONSHIP_TYPE_MAP` remains as separate `<script>` tag (5000+ lines of static data)
+- Resource-to-datatable routing solved via generated f2type→resourcetype mapping instead of modifying 139 service files
+- Browser `performF2Mappings` wrapper syncs UI state (cfnspacing, logicalidstrategy, etc.) to shared module before each call
+
+Deliverables:
+- `npm run build:web` produces 1.7MB production bundle
+- All 74 tests pass (6 suites)
+- Bundle includes: 139 services, 12 mapping modules, formatters, pagination, sdkcall, deepmerge
 
 ### Stage 8: Remove compatibility layer
 

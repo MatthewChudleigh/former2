@@ -20,7 +20,10 @@
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "build:web": "webpack --config webpack.config.js",
+    "dev:web": "webpack --watch --config webpack.config.js --mode development",
+    "generate:f2type-map": "node scripts/generate-f2type-map.js"
   },
   "author": "Ian Mckay",
   "license": "MIT",
@@ -226,7 +229,9 @@
     "proxy-agent": "^6.5.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
   },
   "bin": {
     "former2": "cli/main.js"
