@@ -1,4 +1,8 @@
-# Stage 6: Update CLI to Import Directly
+# Stage 6: Update CLI to Import Directly ✓ COMPLETE
+
+## Status
+
+**Complete.** All tasks implemented, all validation criteria met, all 74 tests pass (6 suites).
 
 ## Objective
 
@@ -292,9 +296,11 @@ cli/utils.js          # Unchanged (still provides nav, filters)
 - Stage 5 (all 139 services converted to modules)
 - Stage 4 (mappings decomposed into shared modules)
 
-## Estimated Scope
+## Actual Outcome
 
-- 1 file modified (`cli/main.js`)
-- ~170 lines changed
-- Net reduction in file size
-- No new files
+- 1 file modified (`cli/main.js`) — rewritten from ~527 lines to ~470 lines
+- VM sandbox, jQuery mocks, blockUI stubs all removed
+- `global.getResourceName` and `global.stripAWSTags` bridged as Node globals for `mapResources` compatibility
+- `createGetResourceTags(sdkcall)` closure pattern resolves circular dependency
+- `setLogFunctions` from shared/mappings used for debug logging
+- All 74 tests pass (6 suites)

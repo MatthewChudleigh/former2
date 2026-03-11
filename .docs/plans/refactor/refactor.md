@@ -206,7 +206,31 @@ Deliverables:
 - `scripts/codemod-service.js` — reusable conversion script (supports `--all`, `--dry-run`, single-file modes)
 - All 74 tests pass (6 suites)
 
-### Stage 6: Update CLI to import directly
+### Stage 6: Update CLI to import directly ✓ COMPLETE
+
+Rewrote `cli/main.js` to import shared modules directly, eliminating the VM sandbox entirely.
+
+Removed:
+- `require('vm')` and all VM context creation/script loading
+- jQuery mock (`$`, `$obj`, `deferredBootstrapTable`)
+- `blockUI`/`unblockUI` stubs
+- `sdkcall` override via VM context
+
+Replaced with:
+- Direct `require()` calls to `shared/services` and `shared/mappings`
+- Plain `context` object with injected `sdkcall`, `region`, `getResourceTags`, `stripAWSTags`, `deepmerge`, `include_default_resources`
+- `createGetResourceTags(sdkcall)` closure pattern to resolve the circular dependency
+- `global.getResourceName` and `global.stripAWSTags` bridged as Node globals (service `mapResources` functions reference them as bare globals)
+- Main scan loop calls `serviceModule.updateDatatable(context)` and collects returned resources
+- `saveOutput` collects `mapResources` from all services and passes to `performF2Mappings`/`compileOutputs`
+- `filter` command updated similarly
+
+Deliverables:
+- `cli/main.js` rewritten (~470 lines, down from ~527)
+- No `vm` module dependency
+- All 74 tests pass (6 suites)
+
+Previous plan for reference:
 
 Remove the VM sandbox from `cli/main.js`. Replace with direct `require()` calls:
 
