@@ -359,7 +359,7 @@ const section = {
 
 async function updateDatatable(context) {
     const resources = [];
-    if (["us-east-1", "us-west-2", "eu-west-1"].includes(region)) { // has to be whitelisted otherwise it hangs on the API call
+    if (["us-east-1", "us-west-2", "eu-west-1"].includes(context.region)) { // has to be whitelisted otherwise it hangs on the API call
         await context.sdkcall("SES", "listReceiptFilters", {
             // no params
         }, true).then((data) => {
@@ -467,7 +467,7 @@ async function updateDatatable(context) {
         "eu-north-1",
         "sa-east-1",
         "us-gov-west-1"
-    ].includes(region)) { // has to be whitelisted otherwise it hangs on the API call
+    ].includes(context.region)) { // has to be whitelisted otherwise it hangs on the API call
         await context.sdkcall("SES", "listConfigurationSets", {
             // no params
         }, true).then(async (data) => {

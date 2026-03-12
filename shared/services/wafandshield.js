@@ -1047,7 +1047,7 @@ const section = {
 
 async function updateDatatable(context) {
     const resources = [];
-    if (region == "us-east-1") {
+    if (context.region == "us-east-1") {
         await context.sdkcall("WAFV2", "listWebACLs", {
             Scope: "CLOUDFRONT"
         }, true).then(async (data) => {
@@ -1147,7 +1147,7 @@ async function updateDatatable(context) {
         }));
     }).catch(() => { });
 
-    if (region == "us-east-1") {
+    if (context.region == "us-east-1") {
         await context.sdkcall("WAFV2", "listRuleGroups", {
             Scope: "CLOUDFRONT"
         }, true).then(async (data) => {
@@ -1197,7 +1197,7 @@ async function updateDatatable(context) {
         }));
     }).catch(() => { });
 
-    if (region == "us-east-1") {
+    if (context.region == "us-east-1") {
         await context.sdkcall("WAFV2", "listIPSets", {
             Scope: "CLOUDFRONT"
         }, true).then(async (data) => {
@@ -1247,7 +1247,7 @@ async function updateDatatable(context) {
         }));
     }).catch(() => { });
 
-    if (region == "us-east-1") {
+    if (context.region == "us-east-1") {
         await context.sdkcall("WAFV2", "listRegexPatternSets", {
             Scope: "CLOUDFRONT"
         }, true).then(async (data) => {

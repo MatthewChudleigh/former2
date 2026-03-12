@@ -186,7 +186,7 @@ async function updateDatatable(context) {
         }));
     }).catch(() => { });
 
-    if (region == "us-east-1") {
+    if (context.region == "us-east-1") {
         await context.sdkcall("ECRPUBLIC", "describeRepositories", {
             // no params
         }, true).then(async (data) => {

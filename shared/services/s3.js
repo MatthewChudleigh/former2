@@ -519,7 +519,7 @@ async function updateDatatable(context) {
                     f2type: 's3.bucket',
                     f2data: bucket,
                     f2region: context.region,
-                    f2link: 'https://console.aws.amazon.com/s3/home?region=' + region + '&bucket=' + bucket.Name,
+                    f2link: 'https://console.aws.amazon.com/s3/home?region=' + context.region + '&bucket=' + bucket.Name,
                     name: bucket.Name,
                     creationdate: bucket.CreationDate
                 });

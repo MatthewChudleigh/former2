@@ -915,7 +915,7 @@ async function updateDatatable(context) {
                 f2type: 'cloudwatch.alarm',
                 f2data: metricAlarm,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + region + '#alarm:alarm:alarmFilter=ANY;name=' + metricAlarm.AlarmName,
+                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + context.region + '#alarm:alarm:alarmFilter=ANY;name=' + metricAlarm.AlarmName,
                 name: metricAlarm.AlarmName,
                 description: metricAlarm.AlarmDescription,
                 metric: metricAlarm.Statistic + " for " + metricAlarm.Namespace + "/" + metricAlarm.MetricName,
@@ -934,7 +934,7 @@ async function updateDatatable(context) {
                 f2type: 'cloudwatch.compositealarm',
                 f2data: compositeAlarm,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + region + '#alarm:alarm:alarmFilter=ANY;name=' + compositeAlarm.AlarmName,
+                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + context.region + '#alarm:alarm:alarmFilter=ANY;name=' + compositeAlarm.AlarmName,
                 name: compositeAlarm.AlarmName,
                 description: compositeAlarm.AlarmDescription
             });
@@ -985,7 +985,7 @@ async function updateDatatable(context) {
                 f2type: 'cloudwatch.loggroup',
                 f2data: logGroup,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + region + '#logStream:group=' + logGroup.logGroupName,
+                f2link: 'https://console.aws.amazon.com/cloudwatch/home?region=' + context.region + '#logStream:group=' + logGroup.logGroupName,
                 name: logGroup.logGroupName,
                 retention: logGroup.retentionInDays + " days",
                 amountstored: logGroup.storedBytes

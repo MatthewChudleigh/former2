@@ -781,7 +781,7 @@ const section = {
 
 async function updateDatatable(context) {
     const resources = [];
-    if (["us-east-1", "us-east-2", "us-west-2", "ap-south-1", "ap-northeast-2", "ap-southeast-1", "ap-southeast-2", "ap-southeast-3", "ap-northeast-1", "eu-central-1", "eu-central-2", "eu-west-1", "eu-west-2", "us-gov-east-1", "us-gov-west-1"].includes(region)) { // has to be whitelisted otherwise it hangs on the API call
+    if (["us-east-1", "us-east-2", "us-west-2", "ap-south-1", "ap-northeast-2", "ap-southeast-1", "ap-southeast-2", "ap-southeast-3", "ap-northeast-1", "eu-central-1", "eu-central-2", "eu-west-1", "eu-west-2", "us-gov-east-1", "us-gov-west-1"].includes(context.region)) { // has to be whitelisted otherwise it hangs on the API call
         await context.sdkcall("Greengrass", "listConnectorDefinitions", {
             // no params
         }, true).then(async (data) => {

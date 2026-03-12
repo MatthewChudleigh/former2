@@ -448,7 +448,7 @@ async function updateDatatable(context) {
                         f2type: 'lambda.function',
                         f2data: data,
                         f2region: context.region,
-                        f2link: 'https://console.aws.amazon.com/lambda/home?region=' + region + '#functions/' + data.Configuration.FunctionName,
+                        f2link: 'https://console.aws.amazon.com/lambda/home?region=' + context.region + '#functions/' + data.Configuration.FunctionName,
                         name: data.Configuration.FunctionName,
                         description: data.Configuration.Description,
                         lastmodified: data.Configuration.LastModified,
