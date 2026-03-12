@@ -1,6 +1,6 @@
 // js/datatables-browser.js
 //
-// Browser-only formatter functions extracted from js/datatables.js.
+// Browser-only formatter functions.
 // These depend on browser globals (output_objects, DOM) and cannot be bundled.
 //
 // The isomorphic formatters (textFormatter, primaryFieldFormatter, etc.)

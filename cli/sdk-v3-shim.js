@@ -3,7 +3,7 @@
 // AWS SDK v3 shim for Former2 CLI.
 // Provides a drop-in replacement for the v2 sdkcall() global by translating
 // v2-style service/method calls into v3 client.send(Command) calls.
-// Replicates the exact pagination and retry logic from js/datatables.js.
+// Uses shared pagination and retry logic from shared/pagination.js.
 
 var deepmerge = require("deepmerge");
 

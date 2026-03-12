@@ -1,7 +1,6 @@
 // shared/formatters.js
 //
-// Formatter functions extracted from js/datatables.js.
-// These are referenced in service file column definitions (e.g. formatter: primaryFieldFormatter).
+// Formatter functions used in service file column definitions (e.g. formatter: primaryFieldFormatter).
 //
 // Browser-only formatters (primaryTextFormatter, detailFormatter, recursivePrettyPrintMap)
 // are NOT included here — they depend on browser globals (output_objects, DOM).

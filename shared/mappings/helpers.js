@@ -1,5 +1,5 @@
 /**
- * Helper functions extracted from js/mappings.js
+ * Helper functions for IaC output mapping
  *
  * These functions handle parameter processing for various IaC output formats
  * (CloudFormation, Terraform, Pulumi, CDKTF, CDK v1/v2, Troposphere),

@@ -1,11 +1,7 @@
 // shared/mappings/index.js
 //
-// Core mapping functions extracted from js/mappings.js.
-// Contains performF2Mappings, compileOutputs, getResourceName, MD5,
+// Core mapping functions: performF2Mappings, compileOutputs, getResourceName, MD5,
 // and module-level state management.
-//
-// The original js/mappings.js remains untouched for backward compatibility.
-// This module is consumed by converted code (CLI after Stage 6, browser after Stage 7).
 
 var { MD5 } = require('./helpers');
 var { outputMapCfn } = require('./cfn');

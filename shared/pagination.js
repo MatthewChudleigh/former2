@@ -1,8 +1,7 @@
 // shared/pagination.js
 //
-// Pagination logic extracted from js/datatables.js (lines 336-564) and
-// cli/sdk-v3-shim.js (lines 346-454). Both sources implement the same
-// pagination token patterns; this module provides a single shared copy.
+// Shared pagination logic for AWS SDK calls.
+// Handles all known pagination token patterns.
 //
 // Reference: https://github.com/iann0036/aws-pagination-rules
 

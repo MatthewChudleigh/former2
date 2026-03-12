@@ -3,7 +3,7 @@
  *
  * This module defines the contracts that all shared code conforms to.
  * It is the foundation for decoupling service logic from both the CLI
- * (VM sandbox) and browser (DOM/jQuery) environments.
+ * and browser environments.
  *
  * @module shared/types
  */
@@ -52,7 +52,7 @@
  *   Removes aws:-prefixed tags from tag arrays/objects. Used in
  *   mapping functions before writing to CloudFormation/Terraform output.
  *
- * @property {typeof import('../js/deepmerge')} deepmerge
+ * @property {typeof import('deepmerge')} deepmerge
  *   Paginated response merging (npm deepmerge). Used by services that
  *   need to merge sub-paginated results beyond what sdkcall handles.
  *
@@ -60,13 +60,6 @@
  *   When true, include default VPCs, subnets, security groups, etc.
  *   Checked by EC2/VPC services. Defaults to false.
  *
- * @property {Function} [blockUI]
- *   No-op in the CLI. In the browser, shows a loading overlay on a
- *   datatable section. Signature: (selector: string) => void.
- *
- * @property {Function} [unblockUI]
- *   No-op in the CLI. In the browser, removes the loading overlay.
- *   Signature: (selector: string) => void.
  */
 
 /**
@@ -103,8 +96,7 @@
  *
  * @property {UpdateDatatableFn} updateDatatable
  *   Data-collection function. Calls the AWS API via `context.sdkcall`
- *   and returns the discovered resources. Previously mutated the DOM
- *   via `deferredBootstrapTable('append', ...)`.
+ *   and returns the discovered resources.
  *
  * @property {MapResourcesFn} mapResources
  *   IaC mapping function. Translates a resource record into

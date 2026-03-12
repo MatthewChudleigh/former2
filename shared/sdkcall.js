@@ -4,7 +4,7 @@
 //
 // Two implementations exist:
 // - cli/sdk-v3-shim.js: AWS SDK v3 for Node.js CLI
-// - js/datatables.js (browser): AWS SDK v2 (to become web/sdkcall-browser.js in Stage 7)
+// - web/sdkcall-browser.js: AWS SDK v2 for browser
 //
 // Both implementations handle:
 // - Service-specific region overrides (GlobalAccelerator→us-west-2, CostExplorer→us-east-1)

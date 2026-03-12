@@ -12,6 +12,7 @@
 var allServices = require('../shared/services');
 var mappings = require('../shared/mappings');
 var formatters = require('../shared/formatters');
+var RELATIONSHIP_TYPE_MAP = require('../shared/relationships');
 var { createBrowserSdkcall, createBrowserSdkcallWaiter } = require('./sdkcall-browser');
 var f2typeMap = require('./f2type-map');
 var deepmerge = require('deepmerge');
@@ -50,9 +51,8 @@ window.byteSizeFormatter = formatters.byteSizeFormatter;
 window.timeAgoFormatter = formatters.timeAgoFormatter;
 window.lambdaRuntimeFormatter = formatters.lambdaRuntimeFormatter;
 
-// Browser-only formatters (defined in js/datatables.js, kept there)
+// Browser-only formatters (defined in js/datatables-browser.js)
 // primaryTextFormatter, detailFormatter, recursivePrettyPrintMap
-// These are defined in the legacy datatables.js which is still loaded for these.
 
 /* ========================================================================== */
 // Mapping functions — exposed globally
@@ -69,8 +69,11 @@ window.getLogicalToPhysicalIdMap = mappings.getLogicalToPhysicalIdMap;
 // Also set as global for mapResources bare references
 window.getResourceName = mappings.getResourceName;
 
-// Expose deepmerge globally (used by js/deepmerge.js replacement)
+// Expose deepmerge globally (used by js/app.js)
 window.deepmerge = deepmerge;
+
+// Expose relationship type map globally (used by js/app.js for diagram relationships)
+window.RELATIONSHIP_TYPE_MAP = RELATIONSHIP_TYPE_MAP;
 
 /* ========================================================================== */
 // Logging functions
@@ -90,7 +93,7 @@ mappings.setLogFunctions(window.f2log, window.f2trace, window.f2debug);
 // include_default_resources — controlled by settings UI
 window.include_default_resources = false;
 
-// service_mapping_functions — collected from all services (for legacy compatibility)
+// service_mapping_functions — collected from all services (used by js/app.js)
 window.service_mapping_functions = services.map(function(s) { return s.mapResources; });
 
 /* ========================================================================== */
@@ -316,7 +319,7 @@ window.f2Nav = nav;
 window.f2Navlower = navlower;
 
 /* ========================================================================== */
-// Diagram helpers (extracted from js/mappings.js — browser-only)
+// Diagram helpers (browser-only)
 /* ========================================================================== */
 
 window.clearDiagram = function clearDiagram() {

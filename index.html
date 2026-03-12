@@ -1623,14 +1623,11 @@
         <!-- AWS SDK v2 (separate — 1.5MB+, loaded as global) -->
         <script src="js/aws-sdk-2.1519.0.min.js"></script>
 
-        <!-- Relationship type data (5000+ lines, loaded as global) -->
-        <script src="js/RelationshipTypeMap.js"></script>
-
         <!-- jQuery plugins (browser-only, must load before bundle) -->
         <script src="js/deferred-datatable.js"></script>
 
-        <!-- Former2 bundle (replaces js/deepmerge.js, js/mappings.js,
-             js/datatables.js, and all 139 js/services/*.js files) -->
+        <!-- Former2 bundle (shared services, mappings, formatters,
+             relationship type map, and browser sdkcall) -->
         <script src="dist/former2-bundle.js"></script>
 
         <!-- Browser-only formatters (depend on output_objects and DOM) -->
