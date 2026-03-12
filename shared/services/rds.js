@@ -724,7 +724,7 @@ async function updateDatatable(context) {
                 f2type: 'rds.instance',
                 f2data: dbInstance,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/rds/home?region=' + region + '#dbinstance:id=' + dbInstance.DBInstanceIdentifier,
+                f2link: 'https://console.aws.amazon.com/rds/home?region=' + context.region + '#dbinstance:id=' + dbInstance.DBInstanceIdentifier,
                 instanceid: dbInstance.DBInstanceIdentifier,
                 engine: dbInstance.Engine,
                 instanceclass: dbInstance.DBInstanceClass,

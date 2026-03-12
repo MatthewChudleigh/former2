@@ -564,7 +564,7 @@ async function updateDatatable(context) {
                         f2type: 'eventbridge.rule',
                         f2data: data,
                         f2region: context.region,
-                        f2link: 'https://console.aws.amazon.com/events/home?region=' + region + '#/rules/' + data.Name,
+                        f2link: 'https://console.aws.amazon.com/events/home?region=' + context.region + '#/rules/' + data.Name,
                         name: data.Name,
                         description: data.Description,
                         eventpattern: data.EventPattern,
@@ -621,7 +621,7 @@ async function updateDatatable(context) {
                                 f2type: 'eventbridge.rule',
                                 f2data: data,
                                 f2region: context.region,
-                                f2link: 'https://console.aws.amazon.com/events/home?region=' + region + '#/rules/' + data.Name,
+                                f2link: 'https://console.aws.amazon.com/events/home?region=' + context.region + '#/rules/' + data.Name,
                                 name: data.Name,
                                 description: data.Description,
                                 eventpattern: data.EventPattern,
@@ -642,7 +642,7 @@ async function updateDatatable(context) {
                         f2type: 'eventbridge.eventbus',
                         f2data: data,
                         f2region: context.region,
-                        f2link: 'https://console.aws.amazon.com/events/home?region=' + region + '#/eventbus/' + data.Name,
+                        f2link: 'https://console.aws.amazon.com/events/home?region=' + context.region + '#/eventbus/' + data.Name,
                         name: data.Name
                     });
                 }

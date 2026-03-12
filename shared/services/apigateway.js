@@ -1295,7 +1295,7 @@ async function updateDatatable(context) {
             (data.features && data.features[0] != "UsagePlans")
         ) {
             resources.push({
-                f2id: data.cloudwatchRoleArn || (region + "-account"),
+                f2id: data.cloudwatchRoleArn || (context.region + "-account"),
                 f2type: 'apigateway.account',
                 f2data: data,
                 f2region: context.region,
@@ -1313,7 +1313,7 @@ async function updateDatatable(context) {
                 f2type: 'apigateway.clientcertificate',
                 f2data: clientCertificate,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + region + '#/client-certificates/' + clientCertificate.clientCertificateId,
+                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + context.region + '#/client-certificates/' + clientCertificate.clientCertificateId,
                 id: clientCertificate.clientCertificateId,
                 description: clientCertificate.description
             });
@@ -1329,7 +1329,7 @@ async function updateDatatable(context) {
                 f2type: 'apigateway.apikey',
                 f2data: apiKey,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + region + '#/api-keys/' + apiKey.id,
+                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + context.region + '#/api-keys/' + apiKey.id,
                 name: apiKey.name,
                 id: apiKey.id,
                 description: apiKey.description,
@@ -1382,7 +1382,7 @@ async function updateDatatable(context) {
                 f2type: 'apigateway.usageplan',
                 f2data: usagePlan,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + region + '#/usage-plans/' + usagePlan.id,
+                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + context.region + '#/usage-plans/' + usagePlan.id,
                 name: usagePlan.name,
                 id: usagePlan.id,
                 description: usagePlan.description
@@ -1650,7 +1650,7 @@ async function updateDatatable(context) {
                 f2type: 'apigateway.restapi',
                 f2data: api,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + region + '#/apis/' + api.id,
+                f2link: 'https://console.aws.amazon.com/apigateway/home?region=' + context.region + '#/apis/' + api.id,
                 name: api.name,
                 id: api.id,
                 description: api.description,

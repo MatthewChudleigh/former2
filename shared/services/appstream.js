@@ -764,7 +764,7 @@ async function updateDatatable(context) {
                 f2type: 'appstream.stack',
                 f2data: stack,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/appstream2/home?region=' + region + '#/stacks?selected=' + stack.Name,
+                f2link: 'https://console.aws.amazon.com/appstream2/home?region=' + context.region + '#/stacks?selected=' + stack.Name,
                 name: stack.Name,
                 displayname: stack.DisplayName,
                 description: stack.Description

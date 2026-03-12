@@ -405,7 +405,7 @@ async function updateDatatable(context) {
                 // no params
             }, true).then(async (accountdata) => {
                 var accountId = accountdata.Account;
-                var arn = "arn:aws:lex:" + region + ":" + accountId + ":bot:" + data.botId
+                var arn = "arn:aws:lex:" + context.region + ":" + accountId + ":bot:" + data.botId
 
                 return context.sdkcall("LexModelsV2", "describeResourcePolicy", {
                     resourceArn: arn

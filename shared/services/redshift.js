@@ -462,7 +462,7 @@ async function updateDatatable(context) {
                 f2type: 'redshift.cluster',
                 f2data: cluster,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/redshift/home?region=' + region + '#cluster-details:cluster=' + cluster.ClusterIdentifier,
+                f2link: 'https://console.aws.amazon.com/redshift/home?region=' + context.region + '#cluster-details:cluster=' + cluster.ClusterIdentifier,
                 clusterid: cluster.ClusterIdentifier,
                 nodetype: cluster.NodeType,
                 databasename: cluster.DBName,

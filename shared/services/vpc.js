@@ -3326,7 +3326,7 @@ async function updateDatatable(context) {
                             f2type: 'ec2.vpc',
                             f2data: vpc,
                             f2region: context.region,
-                            f2link: 'https://console.aws.amazon.com/vpc/home?region=' + region + '#vpcs:filter=' + vpc.VpcId,
+                            f2link: 'https://console.aws.amazon.com/vpc/home?region=' + context.region + '#vpcs:filter=' + vpc.VpcId,
                             vpcid: vpc.VpcId,
                             instancetenancy: vpc.InstanceTenancy,
                             cidrblock: vpc.CidrBlock
@@ -3364,7 +3364,7 @@ async function updateDatatable(context) {
                     f2type: 'ec2.subnet',
                     f2data: subnet,
                     f2region: context.region,
-                    f2link: 'https://console.aws.amazon.com/vpc/home?region=' + region + '#subnets:filter=' + subnet.SubnetId,
+                    f2link: 'https://console.aws.amazon.com/vpc/home?region=' + context.region + '#subnets:filter=' + subnet.SubnetId,
                     subnetid: subnet.SubnetId,
                     availabilityzone: subnet.AvailabilityZone,
                     cidrblock: subnet.CidrBlock,
@@ -3469,7 +3469,7 @@ async function updateDatatable(context) {
                         f2type: 'ec2.internetgateway',
                         f2data: internetGateway,
                         f2region: context.region,
-                        f2link: 'https://console.aws.amazon.com/vpc/home?region=' + region + '#igws:filter=' + internetGateway.InternetGatewayId,
+                        f2link: 'https://console.aws.amazon.com/vpc/home?region=' + context.region + '#igws:filter=' + internetGateway.InternetGatewayId,
                         gatewayid: internetGateway.InternetGatewayId
                     });
                 }
@@ -3486,7 +3486,7 @@ async function updateDatatable(context) {
                 f2type: 'ec2.elasticip',
                 f2data: address,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/vpc/home?region=' + region + '#eips:filter=' + address.PublicIp,
+                f2link: 'https://console.aws.amazon.com/vpc/home?region=' + context.region + '#eips:filter=' + address.PublicIp,
                 ip: address.PublicIp,
                 instanceid: address.InstanceId,
                 allocationid: address.AllocationId,
@@ -3623,7 +3623,7 @@ async function updateDatatable(context) {
                     f2type: 'ec2.networkacl',
                     f2data: networkAcl,
                     f2region: context.region,
-                    f2link: 'https://console.aws.amazon.com/vpc/home?region=' + region + '#acls:filter=' + networkAcl.NetworkAclId,
+                    f2link: 'https://console.aws.amazon.com/vpc/home?region=' + context.region + '#acls:filter=' + networkAcl.NetworkAclId,
                     networkaclid: networkAcl.NetworkAclId,
                     vpcid: networkAcl.VpcId
                 });

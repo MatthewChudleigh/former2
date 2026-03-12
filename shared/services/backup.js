@@ -222,7 +222,7 @@ async function updateDatatable(context) {
                 f2type: 'backup.backupvault',
                 f2data: backupvault,
                 f2region: context.region,
-                f2link: 'https://console.aws.amazon.com/backup/home?region=' + region + '#backupvaults/details/' + backupvault.BackupVaultName,
+                f2link: 'https://console.aws.amazon.com/backup/home?region=' + context.region + '#backupvaults/details/' + backupvault.BackupVaultName,
                 name: backupvault.BackupVaultName,
                 numberofrecoverypoints: backupvault.NumberOfRecoveryPoints
             });
