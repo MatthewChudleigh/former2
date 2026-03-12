@@ -376,6 +376,10 @@ async function main(opts) {
     // Print scan summary report
     printScanReport(scanErrors, scanReport, opts, filteredSections.length);
 
+    if (opts.sortOutput) {
+        allResources.sort((a, b) => (a.f2id > b.f2id) ? 1 : -1);
+    }
+
     if (opts.outputRawData) {
         fs.writeFileSync(opts.outputRawData, JSON.stringify(allResources, null, 4));
     }
