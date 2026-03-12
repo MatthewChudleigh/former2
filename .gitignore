@@ -10,6 +10,7 @@ node_modules
 dist/
 
 .claude/worktrees/
+.task/checksum/
 coverage/
 tmp/
 .env.*
