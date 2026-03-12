@@ -659,7 +659,7 @@ async function updateDatatable(context) {
                         });
                     }));
                 }),
-                (window && window.localStorage.getItem('skipirrelevantresources') != "true") ? // potentially skip
+                (typeof window !== 'undefined' && window.localStorage.getItem('skipirrelevantresources') != "true") ? // potentially skip
                 context.sdkcall("CognitoIdentityServiceProvider", "listUsers", {
                     UserPoolId: userPool.Id
                 }, true).then(async (data) => {

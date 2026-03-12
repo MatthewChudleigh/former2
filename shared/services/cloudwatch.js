@@ -991,7 +991,7 @@ async function updateDatatable(context) {
                 amountstored: logGroup.storedBytes
             });
             return Promise.all([
-                (window && window.localStorage.getItem('skipirrelevantresources') != "true") ? // potentially skip
+                (typeof window !== 'undefined' && window.localStorage.getItem('skipirrelevantresources') != "true") ? // potentially skip
                 context.sdkcall("CloudWatchLogs", "describeLogStreams", {
                     logGroupName: logGroup.logGroupName
                 }, true).then((data) => {
