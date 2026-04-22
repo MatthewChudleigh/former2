@@ -62,6 +62,18 @@ podman run --rm -t -v $(pwd)/out:/output -v ~/.aws:/root/.aws \
   --sort-output
 ```
 
+```powershell
+$c = aws-sso-util credential-process --profile <profile> | ConvertFrom-Json
+
+podman run --rm -t `
+  -v ${PWD}/out:/output -w /output `
+  -e AWS_ACCESS_KEY_ID=$($c.AccessKeyId) `
+  -e AWS_SECRET_ACCESS_KEY=$($c.SecretAccessKey) `
+  -e AWS_SESSION_TOKEN=$($c.SessionToken) `
+  -e AWS_REGION=<region> `
+  former2:latest generate --output-raw-data "infra.json" --region <region> --sort-output
+```
+
 #### Options
 
 At least one `--output-*` option must be specified.
