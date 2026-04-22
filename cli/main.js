@@ -31,6 +31,20 @@ var sections = services.map(s => s.section);
 // Tag cache for getResourceTags
 var resource_tag_cache = {};
 
+// JSON.stringify replacer that emits plain object keys in alphabetical order.
+// Arrays and non-plain objects (Date, etc.) are passed through unchanged so
+// only key ordering is normalised, not value order.
+function sortKeysReplacer(key, value) {
+    if (value && typeof value === "object" && !Array.isArray(value) &&
+        Object.getPrototypeOf(value) === Object.prototype) {
+        return Object.keys(value).sort().reduce(function(acc, k) {
+            acc[k] = value[k];
+            return acc;
+        }, {});
+    }
+    return value;
+}
+
 function stripAWSTags(tags) {
     if (tags) {
         if (Array.isArray(tags)) {
@@ -381,7 +395,7 @@ async function main(opts) {
     }
 
     if (opts.outputRawData) {
-        fs.writeFileSync(opts.outputRawData, JSON.stringify(allResources, null, 4));
+        fs.writeFileSync(opts.outputRawData, JSON.stringify(allResources, sortKeysReplacer, 4));
     }
 
     saveOutput(opts, allResources);
