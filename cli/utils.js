@@ -42,7 +42,32 @@ function applyRegexFilter(resources, regexFilter) {
 }
 
 /**
+ * Services excluded by default because they commonly fail (access denied on
+ * accounts without the specialised service enabled, deprecated APIs, or niche
+ * services most users don't care about). Pass --full to include them.
+ * Names are matched via nav().toLowerCase() against section.service.
+ */
+var DEFAULT_EXCLUDED_SERVICES = [
+    "auditmanager",
+    "billingconductor",
+    "costexplorer",
+    "finspace",
+    "twinmaker",
+    "interactivevideoservice",
+    "lex",
+    "licensemanager",
+    "locationservice",
+    "macie",
+    "organizations",
+    "pinpoint",
+    "quicksight",
+    "rekognition"
+];
+
+/**
  * Filter sections array based on --services (include) or --exclude-services (exclude).
+ * Unless opts.full is set, also drops services in DEFAULT_EXCLUDED_SERVICES
+ * (except when the user explicitly lists them in --services).
  * Returns a new filtered array.
  */
 function applyServiceFilter(sections, opts) {
@@ -55,15 +80,27 @@ function applyServiceFilter(sections, opts) {
         throw new Error("Please do not use --exclude-services and --services simultaneously");
     }
 
+    var includeExcludeServices = null;
     var includeExclude = opts.excludeServices || services;
-    if (!includeExclude) return sections;
-
-    var includeExcludeServices = includeExclude.split(",").map(function(x) { return nav(x).toLowerCase(); });
+    if (includeExclude) {
+        includeExcludeServices = includeExclude.split(",").map(function(x) { return nav(x).toLowerCase(); });
+    }
 
     return sections.filter(function(section) {
-        var includes = includeExcludeServices.includes(nav(section.service).toLowerCase());
-        if (services && !includes) return false;
-        if (opts.excludeServices && includes) return false;
+        var normalized = nav(section.service).toLowerCase();
+
+        if (services) {
+            return includeExcludeServices.includes(normalized);
+        }
+
+        if (opts.excludeServices && includeExcludeServices.includes(normalized)) {
+            return false;
+        }
+
+        if (!opts.full && DEFAULT_EXCLUDED_SERVICES.includes(normalized)) {
+            return false;
+        }
+
         return true;
     });
 }
@@ -72,5 +109,6 @@ module.exports = {
     nav: nav,
     applySearchFilter: applySearchFilter,
     applyRegexFilter: applyRegexFilter,
-    applyServiceFilter: applyServiceFilter
+    applyServiceFilter: applyServiceFilter,
+    DEFAULT_EXCLUDED_SERVICES: DEFAULT_EXCLUDED_SERVICES
 };

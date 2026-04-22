@@ -73,6 +73,37 @@ describe("applyServiceFilter", () => {
         });
     });
 
+    describe("default-excluded services", () => {
+        var sectionsWithExcluded = [
+            { category: "Compute", service: "Lambda" },
+            { category: "Management", service: "Organizations" },
+            { category: "Business", service: "Pinpoint" },
+            { category: "Analytics", service: "QuickSight" },
+            { category: "Compute", service: "EC2" }
+        ];
+
+        it("drops default-excluded services when --full is not set", () => {
+            var result = applyServiceFilter(sectionsWithExcluded, {});
+            expect(result.map(s => s.service).sort()).toEqual(["EC2", "Lambda"]);
+        });
+
+        it("keeps default-excluded services when --full is set", () => {
+            var result = applyServiceFilter(sectionsWithExcluded, { full: true });
+            expect(result).toEqual(sectionsWithExcluded);
+        });
+
+        it("honours --services even for default-excluded entries", () => {
+            var result = applyServiceFilter(sectionsWithExcluded, { services: "Organizations" });
+            expect(result).toHaveLength(1);
+            expect(result[0].service).toBe("Organizations");
+        });
+
+        it("still applies --exclude-services on top of default exclusions", () => {
+            var result = applyServiceFilter(sectionsWithExcluded, { excludeServices: "Lambda" });
+            expect(result.map(s => s.service)).toEqual(["EC2"]);
+        });
+    });
+
     describe("edge cases", () => {
         it("returns empty array when no services match include filter", () => {
             var result = applyServiceFilter(sections, { services: "Nonexistent" });

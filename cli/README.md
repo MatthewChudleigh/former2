@@ -10,19 +10,21 @@ The Former2 CLI allows you to use the [former2.com](https://former2.com) tool di
 
 ## Install
 
-```
+```sh
 npm install -g former2
 ```
 
 Or build the Docker image from the repo root:
 
-```
-docker build -f cli/Dockerfile -t former2:latest .
+```sh
+podman build -f cli/Dockerfile -t former2:latest .
 ```
 
 ## Credentials
 
-Former2 loads AWS credentials from your local credentials file, environment variables, or [other available sources](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/setting-credentials-node.html) per default precedence. It is recommended that you provide only read access with these credentials — assign the [ReadOnlyAccess](https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/ReadOnlyAccess) policy.
+Former2 loads AWS credentials from your local credentials file, environment variables, or [other available sources](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/setting-credentials-node.html) per default precedence.
+
+It is recommended that you provide only read access with these credentials — assign the [ReadOnlyAccess](https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/ReadOnlyAccess) policy.
 
 Use `--profile <name>` to select a named profile from your shared credentials file.
 
@@ -32,7 +34,7 @@ Use `--profile <name>` to select a named profile from your shared credentials fi
 
 Scans your AWS account for resources and generates one or more IaC output files.
 
-```
+```sh
 former2 generate \
   --output-cloudformation "cfn.yml" \
   --output-terraform "main.tf" \
@@ -41,13 +43,23 @@ former2 generate \
   --region us-east-1
 ```
 
-With Docker:
+With Podman:
 
-```
-docker run --rm -t -v $(pwd):/former2 -v ~/.aws:/root/.aws \
+```sh
+podman run --rm -t -v $(pwd):/former2 -v ~/.aws:/root/.aws \
   former2:latest generate \
   --output-cloudformation "cfn.yml" \
   --region us-east-1
+```
+
+```sh
+podman run --rm -t -v $(pwd)/out:/output -v ~/.aws:/root/.aws \
+  -w /output \
+  former2:latest generate \
+  --output-raw-data "infra.json" \
+  --region <region> \
+  --profile <profile> \
+  --sort-output
 ```
 
 #### Options
@@ -72,8 +84,14 @@ Language & policy:
   --cfn-deletion-policy <Delete|Retain>  DeletionPolicy for CloudFormation output
 
 Filtering:
-  --services <value>                     Services to include, comma-separated (default: ALL)
+  --services <value>                     Services to include, comma-separated (default: ALL enabled)
   --exclude-services <value>             Services to exclude, comma-separated
+  --full                                 Also scan niche/restricted services skipped by default
+                                         (AuditManager, BillingConductor, CostExplorer, FinSpace,
+                                          TwinMaker, InteractiveVideoService, Lex, LicenseManager,
+                                          LocationService, Macie, Organizations, Pinpoint,
+                                          QuickSight, Rekognition). Ignored if --services names one
+                                          of them explicitly.
   --search-filter <value>               Text filter on discovered resources
                                          (comma = OR, ampersand = AND)
   --regex-filter <regex>                 RegExp filter on discovered resources
@@ -92,7 +110,7 @@ Scan options:
 
 Produces IaC output from a previously saved raw data file (from `generate --output-raw-data`), without re-scanning AWS. Useful for iterating on filters without repeated API calls.
 
-```
+```sh
 former2 generate --output-raw-data all.json --region us-east-1
 
 former2 filter \
@@ -140,37 +158,37 @@ Other:
 
 Generate CloudFormation for Lambda and IAM only:
 
-```
+```sh
 former2 generate --services "Lambda,IAM" --output-cloudformation "cfn.yml" --region us-east-1
 ```
 
 Generate Terraform excluding CloudWatch and KMS:
 
-```
+```sh
 former2 generate --output-terraform "main.tf" --exclude-services "CloudWatch,KMS" --region us-east-1
 ```
 
 Generate CDK v2 in Python:
 
-```
+```sh
 former2 generate --output-cdk-v2 "cdk_app.py" --iac-language python --region us-east-1
 ```
 
 Generate Pulumi output for S3 resources:
 
-```
+```sh
 former2 generate --output-pulumi "index.ts" --services S3 --region us-east-1
 ```
 
 Filter by resource name/tag:
 
-```
+```sh
 former2 generate --output-terraform "main.tf" --search-filter "myapp" --region us-east-1
 ```
 
 Filter EC2 resources by regex (exclude instances, volumes, ENIs):
 
-```
+```sh
 former2 generate --output-cloudformation "cfn.yml" --services EC2 \
   --regex-filter '"f2type":(?!"(ec2.instance|ec2.volume|ec2.networkinterface)")' \
   --region us-east-1
@@ -178,7 +196,7 @@ former2 generate --output-cloudformation "cfn.yml" --services EC2 \
 
 Scan once, filter multiple times:
 
-```
+```sh
 former2 generate --output-raw-data all.json --region us-east-1
 former2 filter --input-file all.json --services S3 --output-cloudformation s3.yml
 former2 filter --input-file all.json --exclude-services S3 --output-cloudformation no-s3.yml
@@ -334,7 +352,7 @@ All AWS API calls are made directly using the AWS SDK v3. Resource data is kept 
 
 ### Testing
 
-```
+```sh
 npm test                # Run all tests
 npm run test:unit       # Unit tests only
 npm run test:integration # Integration tests only

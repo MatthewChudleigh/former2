@@ -13,4 +13,5 @@ dist/
 .task/checksum/
 coverage/
 tmp/
+out/
 .env.*

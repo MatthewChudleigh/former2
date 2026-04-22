@@ -408,6 +408,7 @@ cliargs
     .option('--regex-filter <regex>', 'search filter as a RegExp for discovered resources')
     .option('--services <value>', 'list of services to include (can be comma separated (default: ALL))')
     .option('--exclude-services <value>', 'list of services to exclude (can be comma separated)')
+    .option('--full', 'also scan niche/restricted services that are skipped by default (e.g. Organizations, Pinpoint, QuickSight, Macie, Rekognition, Lex, IVS, etc.)')
     .option('--sort-output', 'sort resources by their ID before outputting')
     .option('--include-default-resources', 'include default resources such as default VPCs and their subnets')
     .option('--region <regionname>', 'overrides the default AWS region to scan')
